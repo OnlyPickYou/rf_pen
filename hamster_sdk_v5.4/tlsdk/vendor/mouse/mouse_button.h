@@ -15,6 +15,9 @@
 
 #define RC_BUTTON_OVER_THRESH 250		//250 * 12ms = 3000ms
 #define	RC_MAX_BUTTON_VALUE 3
+
+#define SWS_CONTROL_LED2_EN			0
+
 enum{
 	RC_INVALID_VALUE    =  0,
 	RC_ONLY_LEFT_VALUE	=  1,

@@ -75,7 +75,15 @@ void platform_init( rc_status_t *pStatus )
 
 #if MOUSE_SW_CUS
 #define led_cnt_rate    (8 << (pStatus->high_end == MS_HIGHEND_250_REPORTRATE))
-	mouse_led_init(pHW->led_cntr, pHW->gpio_level_led, led_cnt_rate); 
+	mouse_led_init(pHW->led_cntr, pHW->gpio_level_led, led_cnt_rate);
+
+/* LED2 CTRL Init*/
+#if (SWS_CONTROL_LED2_EN)
+	gpio_set_input_en( M_HW_LED2_CTL, 0 ); //input disable
+    gpio_set_output_en( M_HW_LED2_CTL, 1 );//output enable
+    gpio_write(M_HW_LED2_CTL, 0);
+#endif
+
 #endif
 
 #if MOUSE_DEEPSLEEP_EN

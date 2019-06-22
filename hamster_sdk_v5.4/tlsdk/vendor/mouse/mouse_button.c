@@ -223,8 +223,12 @@ u32 rc_button_process_and_mapping(rc_status_t * rc_status)
     /*  invalid button value, return */
     if((button > RC_MAX_BUTTON_VALUE) || (button_pre > RC_MAX_BUTTON_VALUE)){
     	if(RC_ONLY_MID_VALUE == button){
+
+
     		gpio_write(M_HW_LED_CTL, 1);
-    		//gpio_write(M_HW_LED2_CTL, 1);
+#if(SWS_CONTROL_LED2_EN)
+    		gpio_write(M_HW_LED2_CTL, 1);
+#endif
     	}
     	return map_value;
     }

@@ -1,0 +1,13 @@
+!SESSION 2019-06-18 22:47:53.022 -----------------------------------------------
+eclipse.buildId=M20110210-1200
+java.version=1.7.0
+java.vendor=Oracle Corporation
+BootLoader constants: OS=win32, ARCH=x86, WS=win32, NL=zh_CN
+Framework arguments:  -product org.eclipse.epp.package.cpp.product
+Command-line arguments:  -data D:\BaiduNetdiskDownload\HYXDevelop\hamster_sdk_v5.4_RF_Pen_develop -os win32 -ws win32 -arch x86 -product org.eclipse.epp.package.cpp.product
+
+!ENTRY org.eclipse.cdt.core 1 0 2019-06-18 22:48:38.571
+!MESSAGE Indexed 'hamster' (77 sources, 99 headers) in 6.15 sec: 4,992 declarations; 12,657 references; 9 unresolved inclusions; 8 syntax errors; 7 unresolved names (0.04%)
+
+!ENTRY org.eclipse.cdt.core 1 0 2019-06-18 22:49:26.316
+!MESSAGE Indexed 'hamster' (77 sources, 100 headers) in 4.34 sec: 4,782 declarations; 11,197 references; 9 unresolved inclusions; 8 syntax errors; 8 unresolved names (0.05%)

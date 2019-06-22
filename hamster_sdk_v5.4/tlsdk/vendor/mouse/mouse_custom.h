@@ -54,7 +54,7 @@ extern "C" {
 #endif
 
 #ifndef M_HW_LED_CTL
-#define M_HW_LED_CTL    GPIO_DM    //GPIO_GP2
+#define M_HW_LED_CTL    GPIO_GP2    //GPIO_GP2
 #endif
 
 #ifndef M_HW_LED2_CTL
