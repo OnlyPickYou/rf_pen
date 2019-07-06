@@ -38,7 +38,7 @@ custom_btn_ui_t rc_btn_ui = {
 
 
 led_cfg_t rc_led_cfg[] = {
-    32,     1,      1,      0x40,    //power-on, 2s on
+    10,     10,      3,      0x40,    //power-on, 2s on
     2,      2,      255,    0x40,    //pairing manual, 4Hz
     0,      8,      3,      0x80,    //pairing end
     4,      4,      3,      0,       //battery low  2Hz
@@ -102,12 +102,6 @@ void rc_custom_init ( rc_status_t *pStatus ){
 	mouse_custom_re_get_4( pStatus->hw_define, m_hw_def_dft, m_hw_def_dft, sizeof(rc_hw_t)>>2 );
 
     pkt_pairing.did = (p_custom_cfg->did == U32_MAX) ? pkt_pairing.did : p_custom_cfg->did;   //device-id init
-
-
-
-#if (MOUSE_PIPE1_DATA_WITH_DID)
-    pkt_km.did = pkt_pairing.did;
-#endif
 
 	u16 vendor_id = p_custom_cfg->vid;
     if(vendor_id != U16_MAX){

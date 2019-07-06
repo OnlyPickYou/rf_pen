@@ -79,6 +79,7 @@ void platform_init( rc_status_t *pStatus )
 
 /* LED2 CTRL Init*/
 #if (SWS_CONTROL_LED2_EN)
+	gpio_set_func(M_HW_LED2_CTL,AS_GPIO);
 	gpio_set_input_en( M_HW_LED2_CTL, 0 ); //input disable
     gpio_set_output_en( M_HW_LED2_CTL, 1 );//output enable
     gpio_write(M_HW_LED2_CTL, 0);
@@ -230,9 +231,9 @@ static inline void mouse_power_saving_process( rc_status_t *rc_status ){
 	}
 #if	MOUSE_SW_CUS
 	if ( rc_status->high_end == MS_HIGHEND_250_REPORTRATE )
-    	device_sleep.wakeup_time = 4;
-	else
     	device_sleep.wakeup_time = 8;
+	else
+    	device_sleep.wakeup_time = 12;
 #else
 	device_sleep.wakeup_time = 8;
 #endif

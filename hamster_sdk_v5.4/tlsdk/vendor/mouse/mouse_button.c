@@ -18,15 +18,14 @@ static u8 button_last;  //current button
 static u8 button_pre;   //history button
 
 
-static u8 long_left_press_overflow = 0;
 u32 btn_cnt[RC_MAX_BUTTON_VALUE] = {0};
 
 kb_data_t btn_map_value[RC_MAX_DATA_VALUE] = {
-		{1, 0, VK_PAGE_UP, 0, 0, 0, 0, 0},
+		{1, 0, VK_PAGE_DOWN, 0, 0, 0, 0, 0},
 		{1, VK_MSK_SHIFT, VK_F5, 0, 0, 0, 0, 0},
 		{1, 0, VK_ESC, 0, 0, 0, 0, 0},
-		{1, 0, VK_PAGE_DOWN, 0, 0, 0, 0, 0},
-		{1, 0, VK_SLEEP, 0, 0, 0, 0, 0},
+		{1, 0, VK_PAGE_UP, 0, 0, 0, 0, 0},
+		{1, 0, VK_PERIOD, 0, 0, 0, 0, 0},
 };
 
 #if(!MOUSE_BUTTON_GPIO_REUSABILITY)
@@ -180,29 +179,36 @@ u32 rc_button_process(rc_status_t * rc_status)
 
 static u32 rc_btn_value_mapping(rc_status_t *rc_status, u32 btn_last, u32 btn_prev)
 {
-	u32 map_value = RC_MAX_DATA_VALUE;
-
-   if( btn_last ){
-	   return RC_MAX_DATA_VALUE;
+   u32 map_value = RC_MAX_DATA_VALUE;
+   static u8 long_left_cnt = 0;
+   if(RC_ONLY_MID_VALUE == btn_prev){
+	   gpio_write(M_HW_LED_CTL, 0);		//led power off
+	   gpio_write(M_HW_LED2_CTL, 0);
    }
-   gpio_write(M_HW_LED_CTL, 0);		//led power off
    test_mode_pending = 0;
 
 	if(btn_prev == RC_ONLY_LEFT_VALUE){
 		if(btn_cnt[RC_ONLY_LEFT_VALUE - 1] > RC_BUTTON_OVER_THRESH){
-			long_left_press_overflow = (long_left_press_overflow + 1) & 1;
-			map_value = RC_DATA_LONG_LEFT + long_left_press_overflow;
+			if(long_left_cnt){
+				map_value = RC_DATA_LONG_LEFT_OVER;
+			}
+			else{
+				map_value = RC_DATA_LONG_LEFT;
+			}
+			long_left_cnt = (long_left_cnt + 1) & 1;
 		}
 		else{
-			map_value = RC_DATA_SHORT_LEFT + long_left_press_overflow;
+			map_value = RC_DATA_SHORT_LEFT;
 		}
 	}
 	else if(btn_prev == RC_ONLY_RIGHT_VALUE){
-		if(btn_cnt[RC_ONLY_LEFT_VALUE - 1] > RC_BUTTON_OVER_THRESH)
+		if(btn_cnt[RC_ONLY_RIGHT_VALUE - 1] > RC_BUTTON_OVER_THRESH){
 			map_value = RC_DATA_LONG_RIGHT;
+		}
 		else
 			map_value = RC_DATA_SHORT_RIGHT;
 	}
+
 	else if(btn_prev == RC_LEFT_AND_RIGHT_VALUE){
 	    u32 multi_seq = (btn_cnt[RC_LEFT_AND_RIGHT_VALUE - 1] > 800);
 	    u32 paring_any_time = !rc_cust_paring_only_pwon && device_never_linked && !test_mode_pending;
@@ -210,7 +216,7 @@ static u32 rc_btn_value_mapping(rc_status_t *rc_status, u32 btn_last, u32 btn_pr
 	    		btn_last, multi_seq, (rc_status->mouse_mode == STATE_POWERON), paring_any_time );
 	    rc_button_process_test_mode( &rc_status->mouse_mode, &rc_status->dbg_mode, btn_last, test_mode_pending);
 	}
-	memset(btn_cnt, 0, sizeof(btn_cnt));
+	btn_cnt[btn_prev - 1] = 0;
 	return map_value;
 }
 
@@ -221,30 +227,14 @@ u32 rc_button_process_and_mapping(rc_status_t * rc_status)
     u32 button = button_last;
 
     /*  invalid button value, return */
-    if((button > RC_MAX_BUTTON_VALUE) || (button_pre > RC_MAX_BUTTON_VALUE)){
-    	if(RC_ONLY_MID_VALUE == button){
-
-
-    		gpio_write(M_HW_LED_CTL, 1);
-#if(SWS_CONTROL_LED2_EN)
-    		gpio_write(M_HW_LED2_CTL, 1);
-#endif
-    	}
-    	return map_value;
+    if(RC_ONLY_MID_VALUE == button){
+		gpio_write(M_HW_LED_CTL, 1);
+		gpio_write(M_HW_LED2_CTL, 1);
+		button_pre = button;
+		return map_value;
     }
 
-#if 0
-    /* button_last is valid, and button_pre is the same as button last */
-    if(button_pre == button_last){
-    	if( RC_INVALID_VALUE != button_last ){
-    		gpio_write(M_HW_LED_CTL, 1);	//led on
-    		btn_cnt[button_last - 1]++;		//the button has been pressed
-    	}
-    }
-    else{
-    	map_value = rc_btn_value_mapping(rc_status, button_last, button_pre);
-    }
-#else
+
     /* button_last is valid, and button_pre is the same as button last */
     if(button_pre != button_last){
     	if( RC_INVALID_VALUE == button_last ){
@@ -253,13 +243,9 @@ u32 rc_button_process_and_mapping(rc_status_t * rc_status)
     }
     else{
     	if(RC_INVALID_VALUE != button_last){
-    		gpio_write(M_HW_LED_CTL, 1);	//led on
     		btn_cnt[button_last - 1]++;		//the button has been pressed
     	}
     }
-
-#endif
-
 
 	button_pre = button;
     return map_value;

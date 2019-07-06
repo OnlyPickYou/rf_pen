@@ -15,11 +15,11 @@ sleep_cfg_t device_sleep = {
     100,			//wakeup_time
     
     0,				//cnt_8ms
-    0xff,           //thresh_8ms    
+    0x7f,           //thresh_8ms
 
     0,				//cnt_100ms
 #if DEVICE_DEEPSLEEP_EN
-    600,
+    10,
 #else
     0xffff,            //thresh_100ms * x
 #endif

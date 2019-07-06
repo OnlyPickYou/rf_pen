@@ -13,10 +13,10 @@
 #define MOUSE_BUTTON_FULL_FUNCTION     1
 #endif
 
-#define RC_BUTTON_OVER_THRESH 250		//250 * 12ms = 3000ms
+#define RC_BUTTON_OVER_THRESH 150		//200 * 12ms = 2400ms
 #define	RC_MAX_BUTTON_VALUE 3
 
-#define SWS_CONTROL_LED2_EN			0
+#define SWS_CONTROL_LED2_EN			1
 
 enum{
 	RC_INVALID_VALUE    =  0,

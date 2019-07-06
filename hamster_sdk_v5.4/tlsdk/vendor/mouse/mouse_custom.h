@@ -42,7 +42,7 @@ extern "C" {
 #if( MCU_CORE_TYPE == MCU_CORE_8366)
 
 #ifndef M_HW_BTN_LEFT
-#define M_HW_BTN_LEFT   GPIO_GP10
+#define M_HW_BTN_LEFT   GPIO_GP10	//GP10
 #endif
 
 #ifndef M_HW_BTN_RIGHT
@@ -50,7 +50,7 @@ extern "C" {
 #endif
 
 #ifndef M_HW_BTN_MIDL
-#define M_HW_BTN_MIDL   GPIO_GP9
+#define M_HW_BTN_MIDL   GPIO_GP7
 #endif
 
 #ifndef M_HW_LED_CTL
@@ -107,17 +107,15 @@ typedef struct{
 	u32 did;		//0x04~0x07 device id
 	
 	u8	cap;		//0x08 crystal CAP setting
-	
     u8  tx_power;   	 //0x09
     u8  tx_power_paring; //0x0a
     u8  tx_power_sync;
-    u8  tx_power_emi;    //0x0b
 
-    u8  paring_only_pwon;
-    u8  rsvd[2];
+    u8  tx_power_emi;    //0x0c
+    u8  paring_only_pwon;//0x0d
+    u8  slp_mode;		 //0x0e
+    u8  slp_no_dongle;   //0x0f
 
-    u8  slp_mode;		 //0x0c
-    u8  slp_no_dongle;    
     u16 slp_tick;        //time to enter deep sleep mode, 1 seonds base
     
 
@@ -145,23 +143,16 @@ extern led_cfg_t rc_led_cfg[];
 #define QUICK_SLEEP_EN  	        (p_custom_cfg->slp_no_dongle)
 #define GET_HOST_ACCESS_CODE_FLASH_OTP  (p_custom_cfg->gid)
 
-//#define IIC_1M_PULLUP_EN					 (p_custom_cfg->iic_1M_pullup)
-//#define mouse_cust_fct3065xy				 (p_custom_cfg->cust_fct3065xy != U8_MAX)
 
 
 void rc_custom_init ( rc_status_t *pStatus );
-
-#if MOUSE_CUSTOM_FULL_FUNCTION
 
 static inline led_cfg_t mouse_led_pairing_end_cfg_cust( u32 pairing_end ){
 
      rc_led_cfg[E_LED_PAIRING_END].on_time = rc_led_cfg[E_LED_PAIRING_END].off_time;
      return rc_led_cfg[E_LED_PAIRING_END];
 }
-#else
-static inline led_cfg_t mouse_led_cpi_cfg_cust( u32 cpi ) {}
-static inline led_cfg_t mouse_led_pairing_end_cfg_cust( u32 pairing_end ) {}
-#endif
+
 
 
 
