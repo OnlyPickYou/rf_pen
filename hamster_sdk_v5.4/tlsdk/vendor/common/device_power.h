@@ -54,10 +54,18 @@ void kb_sleep_mode_machine(sleep_cfg_t *s_cfg);
  */
 extern int device_sync;
 static inline void device_sleep_wakeup( sleep_cfg_t *s_cfg ){
+	static u32 device_sleep_cnt = 0;
+	static u32 device_sleep_src = 0;
 	if ( MCU_SIM_SUSPEND || s_cfg->mode == M_SUSPEND_0 ){
         cpu_suspend_wakeup_sim( 8000 );
 	}
 	else{
+		device_sleep_cnt++;
+
+		if(s_cfg->wakeup_src == (PM_WAKEUP_CORE | PM_WAKEUP_PAD | PM_WAKEUP_TIMER)){
+			device_sleep_src++;
+		}
+
 		int wakeup_status = cpu_sleep_wakeup_rc (M_SUSPEND_MCU_SLP & s_cfg->mode, s_cfg->wakeup_src, s_cfg->wakeup_time);   // 8ms wakeup
 		if(!(wakeup_status & 2)){
             device_sync = 0;	//ll_channel_alternate_mode ();

@@ -13,7 +13,7 @@
 #define MOUSE_BUTTON_FULL_FUNCTION     1
 #endif
 
-#define RC_BUTTON_OVER_THRESH 150		//200 * 12ms = 2400ms
+#define RC_BUTTON_OVER_THRESH 	120		//120 * 12ms = 1440ms
 #define	RC_MAX_BUTTON_VALUE 3
 
 #define SWS_CONTROL_LED2_EN			1

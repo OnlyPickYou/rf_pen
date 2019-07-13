@@ -38,12 +38,9 @@ custom_btn_ui_t rc_btn_ui = {
 
 
 led_cfg_t rc_led_cfg[] = {
-    10,     10,      3,      0x40,    //power-on, 2s on
-    2,      2,      255,    0x40,    //pairing manual, 4Hz
-    0,      8,      3,      0x80,    //pairing end
-    4,      4,      3,      0,       //battery low  2Hz
-    8,      8,      3,      0,       //cpi, 1Hz
-    0,      8,      3,      0,       //rsvd, 3Hz
+    4,      4,      2,      0x40,    //power-on, 1s on, 64ms * 4 = 256ms
+    4,      4,      2,      0x40,    //pairing manual, 2Hz, 2 times
+    3,      3,      3,      0,       //battery low  2Hz
 };
 
 
@@ -107,6 +104,8 @@ void rc_custom_init ( rc_status_t *pStatus ){
     if(vendor_id != U16_MAX){
 		rf_set_access_code0 (rf_access_code_16to32(vendor_id));
 	}
+
+    pStatus->high_end = U8_MAX;
 
 }
 

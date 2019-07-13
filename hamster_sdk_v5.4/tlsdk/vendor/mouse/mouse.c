@@ -42,6 +42,7 @@ rc_hw_t       rc_hw;
 #endif
 kb_data_t     rc_data;
 
+extern u32 button_last;
 void mouse_sleep_wakeup_init( rc_hw_t *pHW ){
 #ifdef reg_gpio_wakeup_en    
 	reg_gpio_wakeup_en |= FLD_GPIO_WAKEUP_EN;	//gpio wakeup initial
@@ -60,8 +61,9 @@ void mouse_sleep_wakeup_init( rc_hw_t *pHW ){
 
     device_sleep.mcu_sleep_en = CUST_MCU_SLEEP_EN;
     
-    u32 tick = ((p_custom_cfg->slp_tick << 1) + p_custom_cfg->slp_tick) >> 6; //tick = 200ms * 256 * 256 * 3 / 64 = 614s
-    device_sleep.thresh_100ms = tick;		//614 s
+    //u32 tick = ((p_custom_cfg->slp_tick << 1) + p_custom_cfg->slp_tick) >> 6; //tick = 200ms * 256 * 256 * 3 / 64 = 614s
+    device_sleep.thresh_100ms = 5;		//614 s
+
 #else
 	device_sleep.thresh_100ms = U16_MAX;
 #endif	
@@ -114,7 +116,7 @@ void  user_init(void)
 #endif
 
 	rc_button_pull_and_detect(&rc_status);
-	rc_button_process(&rc_status);
+	rc_button_process_and_mapping(&rc_status);
     
     if ( rc_status.mouse_mode == STATE_POWERON )
         mouse_led_setup( rc_led_cfg[E_LED_POWER_ON] );
@@ -169,7 +171,6 @@ void mouse_sync_process(rc_status_t * rc_status){
     else{
         //if linked with dongle, led blinky 3 times
         if( led_linked_host && (rc_status->no_ack == 0) ){
-            mouse_led_setup( rc_led_cfg[E_LED_RSVD] );
             led_linked_host = 0;
         }
     }
@@ -187,7 +188,8 @@ void mouse_sync_process(rc_status_t * rc_status){
         
         if( pairing_end ){
             pairing_time = 0;           //pairing-any-time could re-try many time
-            mouse_led_setup( mouse_led_pairing_end_cfg_cust(pairing_end) );
+            //mouse_led_setup( mouse_led_pairing_end_cfg_cust(pairing_end) );
+    	    gpio_write(M_HW_LED_CTL, 1);		//led power on
             mouse_sync_status_update( rc_status );
         }
         else{
@@ -211,7 +213,7 @@ static inline void mouse_power_saving_process( rc_status_t *rc_status ){
             device_sleep.quick_sleep = 0;        
     }
 #endif
-    device_sleep.device_busy = DEVICE_PKT_ASK || LED_EVENT_BUSY;
+    device_sleep.device_busy = DEVICE_PKT_ASK || LED_EVENT_BUSY || button_last;
     if ( DEBUG_NO_SUSPEND || (rc_status->dbg_mode & STATE_TEST_0_BIT) ){
         device_sleep.mode = M_SUSPEND_0;
     }
@@ -284,12 +286,12 @@ void mouse_task_when_rf ( void ){
     mouse_power_saving_process(&rc_status);
     
     btn_value = rc_button_detect(&rc_status, MOUSE_BTN_LOW);
-    if ( (rc_status.high_end != MS_HIGHEND_250_REPORTRATE) || (rc_status.loop_cnt & 1) ){
-    	map_value = rc_button_process_and_mapping(&rc_status);
-    	if(RC_MAX_DATA_VALUE != map_value){
-    		memcpy(&rc_data, &btn_map_value[map_value], sizeof(kb_data_t));
-    	}
+    //if ( (rc_status.high_end != MS_HIGHEND_250_REPORTRATE) || (rc_status.loop_cnt & 1) ){
+    map_value = rc_button_process_and_mapping(&rc_status);
+    if(RC_MAX_DATA_VALUE != map_value){
+    	memcpy(&rc_data, &btn_map_value[map_value], sizeof(kb_data_t));
     }
+    //}
 #if    MOSUE_BATTERY_LOW_DETECT
     static u16 batt_det_count = 0;    
     if( (rc_status.rf_mode != RF_MODE_IDLE) && (device_sleep.mode == M_SUSPEND_8MS) ){

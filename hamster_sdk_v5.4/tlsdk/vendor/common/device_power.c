@@ -11,15 +11,15 @@
 #include "device_led.h"
 
 sleep_cfg_t device_sleep = {
-    0,				//wakeup_src
-    100,			//wakeup_time
+    2,				//wakeup_src
+    8,				//wakeup_time
     
     0,				//cnt_8ms
-    0x7f,           //thresh_8ms
+    0xb0,           //thresh_8ms
 
     0,				//cnt_100ms
 #if DEVICE_DEEPSLEEP_EN
-    10,
+    5,
 #else
     0xffff,            //thresh_100ms * x
 #endif
@@ -58,7 +58,8 @@ void device_sleep_mode_machine(sleep_cfg_t *s_cfg){
     
     if ( s_cfg->mode & M_SUSPEND_100MS ) {
 		s_cfg->cnt_100ms ++;
-		if ( s_cfg->cnt_100ms > s_cfg->thresh_100ms )	{	
+		if ( s_cfg->cnt_100ms > s_cfg->thresh_100ms )	{
+			s_cfg->cnt_100ms = 0;
 			s_cfg->mode = M_SUSPEND_DEEP_SLP;            
 		}
 	}

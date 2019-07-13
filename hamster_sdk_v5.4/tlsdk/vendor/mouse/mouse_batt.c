@@ -27,7 +27,7 @@ void mouse_batt_det_process( rc_status_t *rc_status ){
         //battery low, led alarm
         u8 vbat_chn = MOUSE_BATT_CHN_REAL_MASK & batt_chn;
         if ( DBG_BATT_LOW || battery_low_detect_auto( vbat_chn == U8_MAX ? COMP_GP6 : vbat_chn ) ){
-            mouse_led_setup( rc_led_cfg[E_LED_BAT_LOW] );
+            //mouse_led_setup( rc_led_cfg[E_LED_BAT_LOW] );
         }
     }
     if ( batt_chn & MOUSE_BATT_CHN_REUSE_FLAG ){   

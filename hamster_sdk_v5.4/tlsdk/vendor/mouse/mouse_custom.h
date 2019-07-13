@@ -87,10 +87,7 @@ extern "C" {
 enum{
 	E_LED_POWER_ON = 0,
     E_LED_PAIRING,
-    E_LED_PAIRING_END,
     E_LED_BAT_LOW,
-    E_LED_CPI,
-    E_LED_RSVD,
 };
 
 typedef struct{
@@ -147,12 +144,13 @@ extern led_cfg_t rc_led_cfg[];
 
 void rc_custom_init ( rc_status_t *pStatus );
 
+#if 0
 static inline led_cfg_t mouse_led_pairing_end_cfg_cust( u32 pairing_end ){
 
      rc_led_cfg[E_LED_PAIRING_END].on_time = rc_led_cfg[E_LED_PAIRING_END].off_time;
      return rc_led_cfg[E_LED_PAIRING_END];
 }
-
+#endif
 
 
 

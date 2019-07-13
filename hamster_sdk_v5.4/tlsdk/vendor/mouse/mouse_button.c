@@ -14,7 +14,7 @@
 #include "mouse_button.h"
 #include "trace.h"
 
-static u8 button_last;  //current button
+u8 button_last;  //current button
 static u8 button_pre;   //history button
 
 
@@ -181,42 +181,36 @@ static u32 rc_btn_value_mapping(rc_status_t *rc_status, u32 btn_last, u32 btn_pr
 {
    u32 map_value = RC_MAX_DATA_VALUE;
    static u8 long_left_cnt = 0;
-   if(RC_ONLY_MID_VALUE == btn_prev){
-	   gpio_write(M_HW_LED_CTL, 0);		//led power off
-	   gpio_write(M_HW_LED2_CTL, 0);
-   }
+
    test_mode_pending = 0;
 
 	if(btn_prev == RC_ONLY_LEFT_VALUE){
-		if(btn_cnt[RC_ONLY_LEFT_VALUE - 1] > RC_BUTTON_OVER_THRESH){
+		if(btn_cnt[RC_ONLY_LEFT_VALUE - 1] == RC_BUTTON_OVER_THRESH){
 			if(long_left_cnt){
 				map_value = RC_DATA_LONG_LEFT_OVER;
 			}
 			else{
 				map_value = RC_DATA_LONG_LEFT;
 			}
+			gpio_write(M_HW_LED_CTL, 1);
 			long_left_cnt = (long_left_cnt + 1) & 1;
-		}
-		else{
-			map_value = RC_DATA_SHORT_LEFT;
 		}
 	}
 	else if(btn_prev == RC_ONLY_RIGHT_VALUE){
-		if(btn_cnt[RC_ONLY_RIGHT_VALUE - 1] > RC_BUTTON_OVER_THRESH){
+		if(btn_cnt[RC_ONLY_RIGHT_VALUE - 1] == RC_BUTTON_OVER_THRESH){
 			map_value = RC_DATA_LONG_RIGHT;
+			gpio_write(M_HW_LED_CTL, 1);
 		}
-		else
-			map_value = RC_DATA_SHORT_RIGHT;
 	}
 
-	else if(btn_prev == RC_LEFT_AND_RIGHT_VALUE){
-	    u32 multi_seq = (btn_cnt[RC_LEFT_AND_RIGHT_VALUE - 1] > 800);
+	else if(btn_prev == RC_ONLY_LEFT_VALUE){
+	    u32 multi_seq = (btn_cnt[RC_ONLY_LEFT_VALUE - 1] > 800);
 	    u32 paring_any_time = !rc_cust_paring_only_pwon && device_never_linked && !test_mode_pending;
 	    test_mode_pending |= mouse_button_special_seq( \
 	    		btn_last, multi_seq, (rc_status->mouse_mode == STATE_POWERON), paring_any_time );
 	    rc_button_process_test_mode( &rc_status->mouse_mode, &rc_status->dbg_mode, btn_last, test_mode_pending);
 	}
-	btn_cnt[btn_prev - 1] = 0;
+	//btn_cnt[btn_prev - 1] = 0;
 	return map_value;
 }
 
@@ -226,28 +220,51 @@ u32 rc_button_process_and_mapping(rc_status_t * rc_status)
 	u32 map_value = RC_MAX_DATA_VALUE;
     u32 button = button_last;
 
+    static u32 btn_proc_cnt = 0;
+
     /*  invalid button value, return */
-    if(RC_ONLY_MID_VALUE == button){
-		gpio_write(M_HW_LED_CTL, 1);
-		gpio_write(M_HW_LED2_CTL, 1);
+    if( RC_ONLY_MID_VALUE == button_pre ){
+    	if( button == button_pre ){
+    		gpio_write(M_HW_LED_CTL, 1);
+#if (SWS_CONTROL_LED2_EN)
+    		gpio_write(M_HW_LED2_CTL, 1);
+#endif
+    	}else{
+    		gpio_write(M_HW_LED_CTL, 0);
+#if (SWS_CONTROL_LED2_EN)
+    		gpio_write(M_HW_LED2_CTL, 0);
+#endif
+    	}
 		button_pre = button;
 		return map_value;
     }
 
-
     /* button_last is valid, and button_pre is the same as button last */
-    if(button_pre != button_last){
+    if( button_pre != button_last ){
     	if( RC_INVALID_VALUE == button_last ){
-    		map_value = rc_btn_value_mapping(rc_status, button_last, button_pre);
+    	//	map_value = rc_btn_value_mapping(rc_status, button_last, button_pre);
+    		if((btn_cnt[button_pre - 1] > 0) && (btn_cnt[button_pre - 1] < RC_BUTTON_OVER_THRESH)){
+    			if(button_pre == RC_ONLY_LEFT_VALUE){
+    				map_value = RC_DATA_SHORT_LEFT;
+    			}else if(button_pre == RC_ONLY_RIGHT_VALUE){
+    				map_value = RC_DATA_SHORT_RIGHT;
+    			}
+    		}
+    		else{
+    			gpio_write(M_HW_LED_CTL, 0);
+    		}
+    		btn_cnt[button_pre - 1] = 0;
     	}
     }
     else{
     	if(RC_INVALID_VALUE != button_last){
     		btn_cnt[button_last - 1]++;		//the button has been pressed
+    		map_value = rc_btn_value_mapping(rc_status, button_last, button_pre);
     	}
     }
 
 	button_pre = button;
+	btn_proc_cnt++;
     return map_value;
 }
 
