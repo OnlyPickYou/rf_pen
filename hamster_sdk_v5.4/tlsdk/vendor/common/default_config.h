@@ -195,6 +195,14 @@ extern "C" {
 #define MOUSE_WHEEL_DIRECTION		0
 #endif
 
+#define FLAG_BUTTON_UP			0x01
+#define FLAG_BUTTON_RF_LED		0x02
+#define FLAG_BUTTON_DOWN		0x04
+#define FLAG_BUTTON_START		0x08
+#define FLAG_BUTTON_TAB			0x10
+#define FLAG_BUTTON_VOL_DOWN		0x20
+#define FLAG_BUTTON_VOL_UP		0x40
+
 #ifndef	FLAG_BUTTON_LEFT
 #define FLAG_BUTTON_LEFT		0x01
 #endif

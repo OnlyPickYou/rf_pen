@@ -18,8 +18,9 @@ u8 button_last;  //current button
 static u8 button_pre;   //history button
 
 
-u32 btn_cnt[RC_MAX_BUTTON_VALUE] = {0};
+//u32 btn_cnt[RC_MAX_BUTTON_VALUE] = {0};
 
+#if 0
 kb_data_t btn_map_value[RC_MAX_DATA_VALUE] = {
 		{1, 0, VK_PAGE_DOWN, 0, 0, 0, 0, 0},
 		{1, VK_MSK_SHIFT, VK_F5, 0, 0, 0, 0, 0},
@@ -27,6 +28,23 @@ kb_data_t btn_map_value[RC_MAX_DATA_VALUE] = {
 		{1, 0, VK_PAGE_UP, 0, 0, 0, 0, 0},
 		{1, 0, VK_PERIOD, 0, 0, 0, 0, 0},
 };
+#else
+kb_data_t btn_map_value[RC_MAX_DATA_VALUE] = {
+		{1, 0, VK_PAGE_UP, 0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{1, 0, VK_PAGE_DOWN, 0, 0, 0, 0, 0},
+		{1, VK_MSK_SHIFT, VK_F5, 0, 0, 0, 0, 0},
+		{1, 0, VK_TAB, 0, 0, 0, 0, 0},
+		{1, 0, VK_VOL_DN, 0, 0, 0, 0, 0},
+		{1, 0, VK_VOL_UP, 0, 0, 0, 0, 0},
+
+		{1, 0, VK_ESC, 0, 0, 0, 0, 0},
+		{1, 0, VK_PERIOD, 0, 0, 0, 0, 0},
+};
+
+
+
+#endif
 
 #if(!MOUSE_BUTTON_GPIO_REUSABILITY)
 	static u32 gpio_btn_all;
@@ -176,7 +194,7 @@ u32 rc_button_process(rc_status_t * rc_status)
     return button;
 }
 
-
+#if 0
 static u32 rc_btn_value_mapping(rc_status_t *rc_status, u32 btn_last, u32 btn_prev)
 {
    u32 map_value = RC_MAX_DATA_VALUE;
@@ -213,24 +231,25 @@ static u32 rc_btn_value_mapping(rc_status_t *rc_status, u32 btn_last, u32 btn_pr
 	//btn_cnt[btn_prev - 1] = 0;
 	return map_value;
 }
-
+#endif
 
 u32 rc_button_process_and_mapping(rc_status_t * rc_status)
 {
 	u32 map_value = RC_MAX_DATA_VALUE;
     u32 button = button_last;
 
-    static u32 btn_proc_cnt = 0;
+    static u8 start_key_cnt = 0;
+    static u8 tab_key_cnt = 0;
+
+    //static u32 btn_proc_cnt = 0;
 
     /*  invalid button value, return */
-    if( RC_ONLY_MID_VALUE == button_pre ){
+    if( RC_ONLY_RF_LED_VALUE == button_pre ){
     	if( button == button_pre ){
-    		gpio_write(M_HW_LED_CTL, 1);
 #if (SWS_CONTROL_LED2_EN)
     		gpio_write(M_HW_LED2_CTL, 1);
 #endif
     	}else{
-    		gpio_write(M_HW_LED_CTL, 0);
 #if (SWS_CONTROL_LED2_EN)
     		gpio_write(M_HW_LED2_CTL, 0);
 #endif
@@ -239,6 +258,43 @@ u32 rc_button_process_and_mapping(rc_status_t * rc_status)
 		return map_value;
     }
 
+    /* button_pre is invaild, and button_last is not the same as button_pre*/
+    if(button_pre != button_last)
+    {
+    	if(RC_INVALID_VALUE != button_pre){
+    		gpio_write(M_HW_LED_CTL, 0);
+    	}else{
+    		gpio_write(M_HW_LED_CTL, 1);
+    		switch(button_last){
+    			case RC_ONLY_UP_VALUE:
+    				map_value = RC_DATA_UP;
+    				break;
+				case RC_ONLY_DOWN_VALUE:
+					map_value = RC_DATA_DOWN;
+					break;
+				case RC_ONLY_START_VALUE:
+					start_key_cnt = (start_key_cnt + 1) & 1;
+					map_value = start_key_cnt ? RC_DTAT_START : RC_DATA_START_OVR;
+					break;
+				case RC_ONLY_TAB_VALUE:
+					tab_key_cnt = (tab_key_cnt + 1) & 1;
+					map_value = tab_key_cnt ? RC_DATA_TAB : RC_DATA_TAB_OVR;
+					break;
+				case RC_ONLY_VOL_DOWN_VALUE:
+					map_value = RC_DATA_VOL_DOWN;
+					break;
+				case RC_ONLY_VOL_UP_VALUE:
+					map_value = RC_DATA_VOL_UP;
+					break;
+				default :
+					break;
+    		}
+    	}
+    }
+
+
+
+#if 0
     /* button_last is valid, and button_pre is the same as button last */
     if( button_pre != button_last ){
     	if( RC_INVALID_VALUE == button_last ){
@@ -262,9 +318,10 @@ u32 rc_button_process_and_mapping(rc_status_t * rc_status)
     		map_value = rc_btn_value_mapping(rc_status, button_last, button_pre);
     	}
     }
-
-	button_pre = button;
 	btn_proc_cnt++;
+#endif
+	button_pre = button;
+
     return map_value;
 }
 

@@ -189,7 +189,7 @@ void mouse_sync_process(rc_status_t * rc_status){
         if( pairing_end ){
             pairing_time = 0;           //pairing-any-time could re-try many time
             //mouse_led_setup( mouse_led_pairing_end_cfg_cust(pairing_end) );
-    	    gpio_write(M_HW_LED_CTL, 1);		//led power on
+    	    //gpio_write(M_HW_LED_CTL, 1);		//led power on
             mouse_sync_status_update( rc_status );
         }
         else{

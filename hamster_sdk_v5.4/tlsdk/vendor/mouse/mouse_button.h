@@ -14,10 +14,12 @@
 #endif
 
 #define RC_BUTTON_OVER_THRESH 	120		//120 * 12ms = 1440ms
-#define	RC_MAX_BUTTON_VALUE 3
+#define	RC_MAX_BUTTON_VALUE 	3
 
-#define SWS_CONTROL_LED2_EN			1
+#define SWS_CONTROL_LED2_EN			0
 
+
+#if 0
 enum{
 	RC_INVALID_VALUE    =  0,
 	RC_ONLY_LEFT_VALUE	=  1,
@@ -35,7 +37,34 @@ enum{
 	RC_DATA_LONG_RIGHT,
 	RC_MAX_DATA_VALUE,
 };
+#else
 
+enum{
+	RC_INVALID_VALUE        =  0,
+	RC_ONLY_UP_VALUE	    = 0x1,
+	RC_ONLY_RF_LED_VALUE    = 0x2,
+	RC_ONLY_DOWN_VALUE      = 0x4,
+	RC_ONLY_START_VALUE     = 0x8,
+	RC_ONLY_TAB_VALUE       = 0x10,
+	RC_ONLY_VOL_DOWN_VALUE  = 0x20,
+	RC_ONLY_VOL_UP_VALUE    = 0x40,
+};
+
+
+enum{
+	RC_DATA_UP = 0,
+	RC_DATA_RF_LED = 1,
+	RC_DATA_DOWN = 2,
+	RC_DTAT_START = 3,
+	RC_DATA_TAB = 4,
+	RC_DATA_VOL_DOWN = 5,
+	RC_DATA_VOL_UP = 6,		//6
+
+	RC_DATA_START_OVR = 7,	//7
+	RC_DATA_TAB_OVR = 8,	//8
+	RC_MAX_DATA_VALUE,
+};
+#endif
 
 extern kb_data_t btn_map_value[RC_MAX_DATA_VALUE];
 

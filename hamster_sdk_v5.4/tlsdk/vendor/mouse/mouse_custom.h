@@ -41,6 +41,79 @@ extern "C" {
 
 #if( MCU_CORE_TYPE == MCU_CORE_8366)
 
+#ifndef M_HW_BTN_UP
+#define M_HW_BTN_UP			GPIO_GP7
+#endif
+
+#ifndef M_HW_BTN_RF_LED
+#define M_HW_BTN_RF_LED		GPIO_GP8
+#endif
+
+#ifndef M_HW_BTN_DOWN
+#define M_HW_BTN_DOWN		GPIO_GP10
+#endif
+
+#ifndef M_HW_BTN_START
+#define M_HW_BTN_START		GPIO_GP9
+#endif
+
+#ifndef M_HW_BTN_TAB
+#define M_HW_BTN_TAB		GPIO_GP0
+#endif
+
+#ifndef M_HW_BTN_VOL_DOWN
+#define M_HW_BTN_VOL_DOWN	GPIO_GP1
+#endif
+
+#ifndef M_HW_BTN_VOL_UP
+#define M_HW_BTN_VOL_UP		GPIO_GP3
+#endif
+
+#ifndef M_HW_LED2_CTL
+#define M_HW_LED2_CTL   	GPIO_SWS
+#endif
+
+#ifndef M_HW_LED_CTL
+#define M_HW_LED_CTL    	GPIO_GP2    //GPIO_GP2
+#endif
+
+#ifndef M_HW_GPIO_LEVEL_UP
+#define M_HW_GPIO_LEVEL_UP   	U8_MAX
+#endif
+
+#ifndef M_HW_GPIO_LEVEL_RF_LED
+#define M_HW_GPIO_LEVEL_RF_LED   U8_MAX
+#endif
+
+#ifndef M_HW_GPIO_LEVEL_DOWN
+#define M_HW_GPIO_LEVEL_DOWN   U8_MAX
+#endif
+
+#ifndef M_HW_GPIO_LEVEL_START
+#define M_HW_GPIO_LEVEL_START   U8_MAX
+#endif
+
+#ifndef M_HW_GPIO_LEVEL_TAB
+#define M_HW_GPIO_LEVEL_TAB   U8_MAX
+#endif
+
+#ifndef M_HW_GPIO_LEVEL_VOL_DOWN
+#define M_HW_GPIO_LEVEL_VOL_DOWN   U8_MAX
+#endif
+
+#ifndef M_HW_GPIO_LEVEL_VOL_UP
+#define M_HW_GPIO_LEVEL_VOL_UP   U8_MAX
+#endif
+
+#ifndef M_HW_GPIO_LEVEL_LED
+#define M_HW_GPIO_LEVEL_LED   U8_MAX
+#endif
+
+#ifndef M_HW_VBAT_CHN
+#define M_HW_VBAT_CHN    COMP_GP6
+#endif
+
+#if(0)
 #ifndef M_HW_BTN_LEFT
 #define M_HW_BTN_LEFT   GPIO_GP10	//GP10
 #endif
@@ -80,6 +153,9 @@ extern "C" {
 #ifndef M_HW_VBAT_CHN
 #define M_HW_VBAT_CHN    COMP_GP6
 #endif
+
+#endif
+
 
 #endif
 
