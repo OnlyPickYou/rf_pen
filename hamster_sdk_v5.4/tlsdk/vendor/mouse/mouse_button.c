@@ -17,8 +17,11 @@
 u8 button_last;  //current button
 static u8 button_pre;   //history button
 
-
+u32 map_value_last;
+rc_btn_ctrl_t rc_btn_ctrl;
 //u32 btn_cnt[RC_MAX_BUTTON_VALUE] = {0};
+u8 start_key_cnt = 0;
+u32 rc_btn_cnt = 0;
 
 #if 0
 kb_data_t btn_map_value[RC_MAX_DATA_VALUE] = {
@@ -29,19 +32,24 @@ kb_data_t btn_map_value[RC_MAX_DATA_VALUE] = {
 		{1, 0, VK_PERIOD, 0, 0, 0, 0, 0},
 };
 #else
+
+
 kb_data_t btn_map_value[RC_MAX_DATA_VALUE] = {
-		{1, 0, VK_PAGE_UP, 0, 0, 0, 0, 0},
+		{1, 0, VK_PAGE_UP, 0, 0, 0, 0, 0},		//0
 		{0, 0, 0, 0, 0, 0, 0, 0, },
 		{1, 0, VK_PAGE_DOWN, 0, 0, 0, 0, 0},
 		{1, VK_MSK_SHIFT, VK_F5, 0, 0, 0, 0, 0},
-		{1, 0, VK_TAB, 0, 0, 0, 0, 0},
+		{1, 0, VK_TAB, 0, 0, 0, 0, 0},				//4
 		{1, 0, VK_VOL_DN, 0, 0, 0, 0, 0},
 		{1, 0, VK_VOL_UP, 0, 0, 0, 0, 0},
 
 		{1, 0, VK_ESC, 0, 0, 0, 0, 0},
 		{1, 0, VK_PERIOD, 0, 0, 0, 0, 0},
+		{1, 0, VK_TAB, 0, 0, 0, 0, 0},				//9
+		{1, VK_MSK_ALT, VK_TAB,0, 0, 0, 0, 0},		//10
+		{1, 0, VK_ENTER, 0, 0, 0, 0, 0},
+		{0, VK_MSK_ALT, 0, 0, 0, 0, 0, 0},
 };
-
 
 
 #endif
@@ -231,97 +239,301 @@ static u32 rc_btn_value_mapping(rc_status_t *rc_status, u32 btn_last, u32 btn_pr
 	//btn_cnt[btn_prev - 1] = 0;
 	return map_value;
 }
+#else
+static u32 rc_btn_value_mapping(rc_status_t *rc_status, u32 btn_last, u32 btn_prev, u32 btn_status, u32 deepsleep)
+{
+
+    static u32 rc_btn_proc = 0;
+    static u32 tab_repeat_flag = 0;
+	u32 map_value = RC_MAX_DATA_VALUE;
+
+	u32 i = 0;
+	static u8 TabPressFlag = 0;
+	static u8 EscPressFlag = 0;
+
+	test_mode_pending = 0;
+	rc_btn_proc += 12;
+
+#if(MOUSE_SIM_RF_PEN)
+
+	if( TabPressFlag && (abs(rc_btn_proc - rc_btn_ctrl.LastPreTick) > 350 )){
+		TabPressFlag = 0;
+		return rc_btn_ctrl.KeyNumSave[0];
+	}
+
+	if(EscPressFlag && (abs(rc_btn_proc - rc_btn_ctrl.LastEscTick) > 350 )){
+		EscPressFlag = 0;
+		return rc_btn_ctrl.KeyNumSave[1];
+	}
+
+	if(RC_BUTTON_FIRST == btn_status){
+		if( RC_ONLY_DOWN_VALUE == btn_last ){
+			EscPressFlag = 0;
+			if(!TabPressFlag){
+				TabPressFlag = 1;
+				rc_btn_ctrl.KeyNumSave[0] = RC_DATA_TAB_OVR;
+			}
+			else{
+				if (abs(rc_btn_proc - rc_btn_ctrl.LastPreTick) < 350){
+					TabPressFlag = 0;
+					//if(start_key_cnt){
+					map_value = RC_DATA_DOUBLE_TAB;
+					//}
+				}
+			}
+			if(deepsleep){
+				map_value = RC_DATA_TAB_OVR;
+				TabPressFlag = 0;
+			}
+
+			rc_btn_ctrl.LastPreTick = rc_btn_proc;
+		}
+		else if(RC_ONLY_UP_VALUE == btn_last){
+			TabPressFlag = 0;						//release
+			if(!EscPressFlag){
+				EscPressFlag = 1;
+			}
+			start_key_cnt = (start_key_cnt + 1) & 1;
+			rc_btn_ctrl.KeyNumSave[1] = RC_DTAT_START + (start_key_cnt << 2);
+			//map_value = RC_DTAT_START + (start_key_cnt << 2);
+			rc_btn_ctrl.LastEscTick = rc_btn_proc;
+			if(deepsleep){
+				map_value = rc_btn_ctrl.KeyNumSave[1];
+				EscPressFlag = 0;
+			}
+
+		}
+		else{
+			TabPressFlag = 0;
+			EscPressFlag = 0;
+			for(i=MAX_MOUSE_BUTTON-1; i>=0; i--)
+			{
+				if( btn_last == BIT(i) ){
+					map_value = i;
+					break;
+				}
+			}
+		}
+	}
+	else if(RC_BUTTON_KEEP == btn_status)
+	{
+		rc_btn_proc -= 6;
+		if( tab_repeat_flag && (RC_ONLY_DOWN_VALUE == btn_last) ){
+			map_value = RC_DATA_REPEAT_ALT;
+		}
+
+	}
+	else if(RC_BUTTON_REPEAT == btn_status){
+		TabPressFlag = 0;
+		EscPressFlag = 0;
+		if(RC_ONLY_UP_VALUE == btn_last){
+			map_value = RC_DATA_LONG_START;
+		}
+		else if(RC_ONLY_DOWN_VALUE == btn_last){
+			tab_repeat_flag = 1;
+			map_value = RC_DATA_LONG_TAB;
+		}
+		else{
+			for(i=MAX_MOUSE_BUTTON-1; i>=0; i--)
+			{
+				if( btn_last == BIT(i) ){
+					map_value = i;
+					break;
+				}
+			}
+		}
+	}
+	else{
+		tab_repeat_flag = 0;
+	}
+#else
+	if( TabPressFlag && (abs(rc_btn_proc - rc_btn_ctrl.LastPreTick) > 350 )){
+		TabPressFlag = 0;
+		return rc_btn_ctrl.KeyNumSave[0];
+	}
+
+	if(EscPressFlag && (abs(rc_btn_proc - rc_btn_ctrl.LastEscTick) > 350 )){
+		EscPressFlag = 0;
+		return rc_btn_ctrl.KeyNumSave[1];
+	}
+
+	if(RC_BUTTON_FIRST == btn_status){
+		if( RC_ONLY_TAB_VALUE == btn_last ){
+			EscPressFlag = 0;
+			if(!TabPressFlag){
+				TabPressFlag = 1;
+				rc_btn_ctrl.KeyNumSave[0] = RC_DATA_TAB_OVR;
+			}
+			else{
+				if (abs(rc_btn_proc - rc_btn_ctrl.LastPreTick) < 350){
+					TabPressFlag = 0;
+					//if(start_key_cnt){
+					map_value = RC_DATA_DOUBLE_TAB;
+					//}
+				}
+			}
+
+			if(deepsleep){
+				map_value = RC_DATA_TAB_OVR;
+				TabPressFlag = 0;
+			}
+			rc_btn_ctrl.LastPreTick = rc_btn_proc;
+		}
+		else if(RC_ONLY_START_VALUE == btn_last){
+			TabPressFlag = 0;						//release
+			if(!EscPressFlag){
+				EscPressFlag = 1;
+			}
+			start_key_cnt = (start_key_cnt + 1) & 1;
+			rc_btn_ctrl.KeyNumSave[1] = RC_DTAT_START + (start_key_cnt << 2);
+			//map_value = RC_DTAT_START + (start_key_cnt << 2);
+			rc_btn_ctrl.LastEscTick = rc_btn_proc;
+
+			if(deepsleep){
+				map_value = rc_btn_ctrl.KeyNumSave[1];
+				EscPressFlag = 0;
+			}
+
+		}
+		else{
+			TabPressFlag = 0;
+			EscPressFlag = 0;
+
+			if(RC_ONLY_UP_VALUE == btn_last){
+				map_value = RC_DATA_UP;
+			}
+			else if(RC_ONLY_RF_LED_VALUE == btn_last){
+				map_value = RC_DATA_RF_LED;
+			}
+			else if(RC_ONLY_DOWN_VALUE == btn_last){
+				map_value = RC_DATA_DOWN;
+			}
+			else if(RC_ONLY_VOL_DOWN_VALUE == btn_last){
+				map_value = RC_DATA_VOL_DOWN;
+			}
+			else if(RC_ONLY_VOL_UP_VALUE == btn_last){
+				map_value = RC_DATA_VOL_UP;
+			}
+
+
+//			for(i=MAX_MOUSE_BUTTON-1; i>=0; i--)
+//			{
+//				if( btn_last == BIT(i) ){
+//					map_value = i;
+//					break;
+//				}
+//			}
+		}
+	}
+	else if(RC_BUTTON_KEEP == btn_status)
+	{
+		rc_btn_proc -= 6;
+		if( tab_repeat_flag && (RC_ONLY_TAB_VALUE == btn_last) ){
+			map_value = RC_DATA_REPEAT_ALT;
+		}
+
+	}
+	else if(RC_BUTTON_REPEAT == btn_status){
+		TabPressFlag = 0;
+		EscPressFlag = 0;
+		if(RC_ONLY_START_VALUE == btn_last){
+			map_value = RC_DATA_LONG_START;
+		}
+		else if(RC_ONLY_TAB_VALUE == btn_last){
+			tab_repeat_flag = 1;
+			map_value = RC_DATA_LONG_TAB;
+		}
+		else{
+
+			if(RC_ONLY_UP_VALUE == btn_last){
+				map_value = RC_DATA_UP;
+			}
+			else if(RC_ONLY_RF_LED_VALUE == btn_last){
+				map_value = RC_DATA_RF_LED;
+			}
+			else if(RC_ONLY_DOWN_VALUE == btn_last){
+				map_value = RC_DATA_DOWN;
+			}
+			else if(RC_ONLY_VOL_DOWN_VALUE == btn_last){
+				map_value = RC_DATA_VOL_DOWN;
+			}
+			else if(RC_ONLY_VOL_UP_VALUE == btn_last){
+				map_value = RC_DATA_VOL_UP;
+			}
+
+//			for(i=MAX_MOUSE_BUTTON-1; i>=0; i--)
+//			{
+//				if( btn_last == BIT(i) ){
+//					map_value = i;
+//					break;
+//				}
+//			}
+		}
+	}
+	else{
+		tab_repeat_flag = 0;
+	}
 #endif
 
-u32 rc_button_process_and_mapping(rc_status_t * rc_status)
+
+	//u32 multi_seq = (btn_cnt[RC_ONLY_LEFT_VALUE - 1] > 800);
+	u32 multi_seq = 0;
+	u32 paring_any_time = !rc_cust_paring_only_pwon && device_never_linked && !test_mode_pending;
+	test_mode_pending |= mouse_button_special_seq( \
+			btn_last, multi_seq, (rc_status->mouse_mode == STATE_POWERON), paring_any_time );
+	rc_button_process_test_mode( &rc_status->mouse_mode, &rc_status->dbg_mode, btn_last, test_mode_pending);
+
+	return map_value;
+}
+#endif
+
+u32 rc_button_process_and_mapping(rc_status_t * rc_status, u32 deepsleep)
 {
 	u32 map_value = RC_MAX_DATA_VALUE;
     u32 button = button_last;
+    u32 button_flag = RC_BUTTON_RELEASE;
 
-    static u8 start_key_cnt = 0;
-    static u8 tab_key_cnt = 0;
-
-    //static u32 btn_proc_cnt = 0;
-
-    /*  invalid button value, return */
-    if( RC_ONLY_RF_LED_VALUE == button_pre ){
-    	if( button == button_pre ){
-#if (SWS_CONTROL_LED2_EN)
-    		gpio_write(M_HW_LED2_CTL, 1);
-#endif
-    	}else{
-#if (SWS_CONTROL_LED2_EN)
-    		gpio_write(M_HW_LED2_CTL, 0);
-#endif
-    	}
-		button_pre = button;
-		return map_value;
-    }
-
-    /* button_pre is invaild, and button_last is not the same as button_pre*/
-    if(button_pre != button_last)
-    {
-    	if(RC_INVALID_VALUE != button_pre){
-    		gpio_write(M_HW_LED_CTL, 0);
-    	}else{
-    		gpio_write(M_HW_LED_CTL, 1);
-    		switch(button_last){
-    			case RC_ONLY_UP_VALUE:
-    				map_value = RC_DATA_UP;
-    				break;
-				case RC_ONLY_DOWN_VALUE:
-					map_value = RC_DATA_DOWN;
-					break;
-				case RC_ONLY_START_VALUE:
-					start_key_cnt = (start_key_cnt + 1) & 1;
-					map_value = start_key_cnt ? RC_DTAT_START : RC_DATA_START_OVR;
-					break;
-				case RC_ONLY_TAB_VALUE:
-					tab_key_cnt = (tab_key_cnt + 1) & 1;
-					map_value = tab_key_cnt ? RC_DATA_TAB : RC_DATA_TAB_OVR;
-					break;
-				case RC_ONLY_VOL_DOWN_VALUE:
-					map_value = RC_DATA_VOL_DOWN;
-					break;
-				case RC_ONLY_VOL_UP_VALUE:
-					map_value = RC_DATA_VOL_UP;
-					break;
-				default :
-					break;
-    		}
-    	}
-    }
-
-
-
-#if 0
-    /* button_last is valid, and button_pre is the same as button last */
-    if( button_pre != button_last ){
-    	if( RC_INVALID_VALUE == button_last ){
-    	//	map_value = rc_btn_value_mapping(rc_status, button_last, button_pre);
-    		if((btn_cnt[button_pre - 1] > 0) && (btn_cnt[button_pre - 1] < RC_BUTTON_OVER_THRESH)){
-    			if(button_pre == RC_ONLY_LEFT_VALUE){
-    				map_value = RC_DATA_SHORT_LEFT;
-    			}else if(button_pre == RC_ONLY_RIGHT_VALUE){
-    				map_value = RC_DATA_SHORT_RIGHT;
-    			}
-    		}
-    		else{
-    			gpio_write(M_HW_LED_CTL, 0);
-    		}
-    		btn_cnt[button_pre - 1] = 0;
+    if(RC_INVALID_VALUE == button_pre ){
+        /*detect whether is new button is pressed */
+    	if( button_last ){
+    		button_flag = RC_BUTTON_FIRST;
+    		gpio_write(M_HW_LED_CTL, 1);	//enable LED
     	}
     }
     else{
-    	if(RC_INVALID_VALUE != button_last){
-    		btn_cnt[button_last - 1]++;		//the button has been pressed
-    		map_value = rc_btn_value_mapping(rc_status, button_last, button_pre);
+    	if(button_pre == button_last){
+		/*detect whether is button is long pressed */
+    		gpio_write(M_HW_LED_CTL, 1);	//enable LED
+    		if( rc_btn_cnt >= RC_BUTTON_REPEAT_THRESH){
+    			rc_btn_cnt = 0;
+        		button_flag = RC_BUTTON_REPEAT;
+    		}
+    		else{
+    			rc_btn_cnt += 6;
+    			button_flag = RC_BUTTON_KEEP;
+    		}
+    	}
+    	else if(RC_INVALID_VALUE == button_last ){
+		/*detect whether is button is released */
+    		rc_btn_cnt = 0;
+    		gpio_write(M_HW_LED_CTL, 0);	//shut down LED
     	}
     }
-	btn_proc_cnt++;
+
+	map_value = rc_btn_value_mapping(rc_status, button_last, button_pre, button_flag, deepsleep);
+
+#if(SWS_CONTROL_LED2_EN)
+    if(map_value == RC_DATA_RF_LED){
+    	gpio_write(M_HW_LED2_CTL , 1);
+    }
+    else{
+    	gpio_write(M_HW_LED2_CTL , 0);
+    }
 #endif
+
 	button_pre = button;
 
+	map_value_last = map_value;
     return map_value;
 }
 

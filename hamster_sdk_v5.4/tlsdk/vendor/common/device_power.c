@@ -19,7 +19,7 @@ sleep_cfg_t device_sleep = {
 
     0,				//cnt_100ms
 #if DEVICE_DEEPSLEEP_EN
-    5,
+    10,
 #else
     0xffff,            //thresh_100ms * x
 #endif

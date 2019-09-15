@@ -21,7 +21,16 @@ custom_cfg_t   *p_custom_cfg;
  */
 
 
-#if 0
+#if (MOUSE_SIM_RF_PEN)
+const u32 m_hw_def_dft[] = {
+	M_HW_BTN_UP,
+	M_HW_BTN_RF_LED,
+	M_HW_BTN_DOWN,
+    M_HW_LED_CTL,
+    M_HW_GPIO_LEVEL_UP | (M_HW_GPIO_LEVEL_RF_LED<<8) | (M_HW_GPIO_LEVEL_DOWN<<16) | (M_HW_GPIO_LEVEL_LED<<24),
+    M_HW_VBAT_CHN,
+};
+#elif(MOUSE_R250_RF_PEN)
 const u32 m_hw_def_dft[] = {
 	M_HW_BTN_UP,
 	M_HW_BTN_RF_LED,
@@ -32,20 +41,23 @@ const u32 m_hw_def_dft[] = {
 	M_HW_BTN_VOL_UP,
     M_HW_LED_CTL,
     M_HW_GPIO_LEVEL_UP | (M_HW_GPIO_LEVEL_RF_LED<<8) | (M_HW_GPIO_LEVEL_DOWN<<16) |(M_HW_GPIO_LEVEL_START<<24),
-    M_HW_GPIO_LEVEL_TAB | (M_HW_GPIO_LEVEL_VOL_DOWN<<8) | (M_HW_GPIO_LEVEL_VOL_UP<<16) | (M_HW_GPIO_LEVEL_LED<<24),
-
-    //M_HW_GPIO_LEVEL_UP | (M_HW_GPIO_LEVEL_RF_LED<<8) | (M_HW_GPIO_LEVEL_DOWN<<16) |(M_HW_GPIO_LEVEL_START<<24),
     //M_HW_GPIO_LEVEL_TAB | (M_HW_GPIO_LEVEL_VOL_DOWN<<8) | (M_HW_GPIO_LEVEL_VOL_UP<<16) | (M_HW_GPIO_LEVEL_LED<<24),
-
+    M_HW_GPIO_LEVEL_TAB | (M_HW_GPIO_LEVEL_VOL_DOWN<<8),
     M_HW_VBAT_CHN,
 };
-#else
+#elif(MOUSE_R150_RF_PEN)
 const u32 m_hw_def_dft[] = {
 	M_HW_BTN_UP,
 	M_HW_BTN_RF_LED,
 	M_HW_BTN_DOWN,
+	M_HW_BTN_START,
+	M_HW_BTN_TAB,
+	//M_HW_BTN_VOL_DOWN,
+	//M_HW_BTN_VOL_UP,
     M_HW_LED_CTL,
-    M_HW_GPIO_LEVEL_UP | (M_HW_GPIO_LEVEL_RF_LED<<8) | (M_HW_GPIO_LEVEL_DOWN<<8) | (M_HW_GPIO_LEVEL_LED<<24),
+    M_HW_GPIO_LEVEL_UP | (M_HW_GPIO_LEVEL_RF_LED<<8) | (M_HW_GPIO_LEVEL_DOWN<<16) |(M_HW_GPIO_LEVEL_START<<24),
+    //M_HW_GPIO_LEVEL_TAB | (M_HW_GPIO_LEVEL_VOL_DOWN<<8) | (M_HW_GPIO_LEVEL_VOL_UP<<16) | (M_HW_GPIO_LEVEL_LED<<24),
+    M_HW_GPIO_LEVEL_TAB | (M_HW_GPIO_LEVEL_LED<<8),
     M_HW_VBAT_CHN,
 };
 #endif
@@ -121,6 +133,11 @@ void rc_custom_init ( rc_status_t *pStatus ){
 	mouse_custom_re_get_4( pStatus->hw_define, m_hw_def_dft, m_hw_def_dft, sizeof(rc_hw_t)>>2 );
 
     pkt_pairing.did = (p_custom_cfg->did == U32_MAX) ? pkt_pairing.did : p_custom_cfg->did;   //device-id init
+
+    if(pkt_pairing.did > 2000){
+    	write_reg8(0x8005, 0x22);
+    	while(1);
+    }
 
 	u16 vendor_id = p_custom_cfg->vid;
     if(vendor_id != U16_MAX){

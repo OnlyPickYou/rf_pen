@@ -30,7 +30,6 @@
 /*
  * user_init -mouse_hw 只有gpio和led
  * platform_init -- 初始化button和led
- * 其他不需要
  *
  */
 
@@ -41,6 +40,9 @@ rc_status_t   rc_status;
 rc_hw_t       rc_hw;
 #endif
 kb_data_t     rc_data;
+
+u32 btn_wakeup_flag = 0;
+u32 btn_wakeup_value = RC_MAX_DATA_VALUE;
 
 extern u32 button_last;
 void mouse_sleep_wakeup_init( rc_hw_t *pHW ){
@@ -115,11 +117,17 @@ void  user_init(void)
 	cpu_set_gpio_wakeup(rc_status.hw_define->wheel[1], 0, 0);
 #endif
 
-	rc_button_pull_and_detect(&rc_status);
-	rc_button_process_and_mapping(&rc_status);
-    
-    if ( rc_status.mouse_mode == STATE_POWERON )
+    if ( rc_status.mouse_mode == STATE_POWERON ){
         mouse_led_setup( rc_led_cfg[E_LED_POWER_ON] );
+    }
+    else if(rc_status.mouse_mode == STATE_NORMAL){
+    	btn_wakeup_flag = 1;
+    	write_reg8(0x8001, 0x5a);
+    }
+
+	rc_button_pull_and_detect(&rc_status);
+	btn_wakeup_value = rc_button_process_and_mapping(&rc_status, btn_wakeup_flag);
+
 #endif
     rc_rf_init(&rc_status);
     rf_set_power_level_index (rc_cust_tx_power_paring);
@@ -287,9 +295,13 @@ void mouse_task_when_rf ( void ){
     
     btn_value = rc_button_detect(&rc_status, MOUSE_BTN_LOW);
     //if ( (rc_status.high_end != MS_HIGHEND_250_REPORTRATE) || (rc_status.loop_cnt & 1) ){
-    map_value = rc_button_process_and_mapping(&rc_status);
+    map_value = rc_button_process_and_mapping(&rc_status, 0);
     if(RC_MAX_DATA_VALUE != map_value){
     	memcpy(&rc_data, &btn_map_value[map_value], sizeof(kb_data_t));
+    }
+    else if(btn_wakeup_flag && RC_MAX_DATA_VALUE != btn_wakeup_value){
+    	btn_wakeup_flag = 0;
+    	memcpy(&rc_data, &btn_map_value[btn_wakeup_value], sizeof(kb_data_t));
     }
     //}
 #if    MOSUE_BATTERY_LOW_DETECT

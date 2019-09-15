@@ -14,7 +14,7 @@
 #endif
 
 static device_info_t device_info;
-
+extern u8 start_key_cnt;
 /*
  *  Base on from power on or deep sleep back
  *  Load customizable information from the 3.3V Analog register
@@ -36,6 +36,8 @@ void device_info_load(rc_status_t *rc_status)
     device_info.poweron = 0xe0;
     analog_write (PM_REG_END, device_info.poweron);    
 #else
+    start_key_cnt = device_info.channel;
+    write_reg8(0x8000, start_key_cnt);
     device_info.poweron = ((device_info.mode^0x80) + 2) | 1;
     analog_write (PM_REG_END, device_info.poweron);
 #endif
@@ -64,6 +66,7 @@ void device_info_save(rc_status_t *rc_status, u32 sleep_save)
 #if PM_POWERON_DETECTION_ENABLE
     device_info.mode = 0xe5;
 #else
+    device_info.channel = start_key_cnt;
     if ( sleep_save )
         device_info.mode = device_info.poweron - 2;
 #endif

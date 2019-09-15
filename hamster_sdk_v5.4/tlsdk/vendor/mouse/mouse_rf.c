@@ -165,6 +165,7 @@ static inline void mouse_rf_prepare(rc_status_t *rc_status)
 		rc_status->rf_mode |= RF_MODE_DATA;
         static u8 tx_power;
         //set tx power
+#if 0
         if ( !CHIP_8366_A1 || MOUSE_RX_RSSI_LOW ){ 
             rf_set_power_level_index (rc_status->tx_power);
             tx_power = MOUSE_DATA_TX_POWER;
@@ -173,6 +174,10 @@ static inline void mouse_rf_prepare(rc_status_t *rc_status)
             rf_set_power_level_index ( RF_POWER_2dBm );   
             tx_power = RF_POWER_2dBm;
         }
+#else
+        rf_set_power_level_index ( RF_POWER_8dBm );
+        tx_power = RF_POWER_8dBm;
+#endif
 	}
 #if 1
     else{

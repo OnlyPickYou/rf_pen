@@ -32,11 +32,19 @@ extern "C" {
 #endif
 
 
+#define MOUSE_SIM_RF_PEN		0
+#define MOUSE_R250_RF_PEN		1
+#define MOUSE_R150_RF_PEN		0
+
 #define SWS_DATA_OUT 			1   //sws pullup: output high, output disable
 
 #define _USER_CONFIG_DEFINED_	1	// must define this macro to make others known 
 
+#if(MOUSE_SIM_RF_PEN)
 #define MAX_MOUSE_BUTTON        3
+#else
+#define MAX_MOUSE_BUTTON        5
+#endif
 
 #define		PKT_BUFF_SIZE		48
 

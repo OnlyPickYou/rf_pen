@@ -16,8 +16,15 @@
 #define RC_BUTTON_OVER_THRESH 	120		//120 * 12ms = 1440ms
 #define	RC_MAX_BUTTON_VALUE 	3
 
-#define SWS_CONTROL_LED2_EN			0
+#define SWS_CONTROL_LED2_EN			1
+#define RC_BUTTON_REPEAT_THRESH	300			//12 * 16ms = 200ms
+#define RC_DOUBLE_TAB_THRESH	12
 
+
+#define RC_BUTTON_FIRST			0x01
+#define RC_BUTTON_KEEP			0x02
+#define RC_BUTTON_REPEAT		0x04
+#define RC_BUTTON_RELEASE		0x08
 
 #if 0
 enum{
@@ -62,8 +69,21 @@ enum{
 
 	RC_DATA_START_OVR = 7,	//7
 	RC_DATA_TAB_OVR = 8,	//8
+
+	RC_DATA_LONG_START = 9,
+	RC_DATA_LONG_TAB = 0xa,
+
+	RC_DATA_DOUBLE_TAB = 0xb,
+	RC_DATA_REPEAT_ALT = 0xc,
+
 	RC_MAX_DATA_VALUE,
 };
+
+typedef struct{
+	u32 LastPreTick;
+	u32 LastEscTick;
+	u8 KeyNumSave[2];
+}rc_btn_ctrl_t;
 #endif
 
 extern kb_data_t btn_map_value[RC_MAX_DATA_VALUE];
@@ -71,7 +91,7 @@ extern kb_data_t btn_map_value[RC_MAX_DATA_VALUE];
 
 void rc_button_init(rc_hw_t *rc_hw);
 u32 rc_button_process(rc_status_t * rc_status);
-u32 rc_button_process_and_mapping(rc_status_t * rc_status);
+u32 rc_button_process_and_mapping(rc_status_t * rc_status, u32 deepsleep);
 u32 rc_button_process_emi(s8 *chn_idx, u8 *test_mode_sel, u32 btn_pro_end);
 
 u32 rc_button_detect(rc_status_t  * rc_status, u32 detect_level);
