@@ -346,7 +346,7 @@ static u32 rc_btn_value_mapping(rc_status_t *rc_status, u32 btn_last, u32 btn_pr
 	else{
 		tab_repeat_flag = 0;
 	}
-#else
+#elif(MOUSE_R150_RF_PEN)
 	if( TabPressFlag && (abs(rc_btn_proc - rc_btn_ctrl.LastPreTick) > 350 )){
 		TabPressFlag = 0;
 		return rc_btn_ctrl.KeyNumSave[0];
@@ -473,6 +473,41 @@ static u32 rc_btn_value_mapping(rc_status_t *rc_status, u32 btn_last, u32 btn_pr
 	else{
 		tab_repeat_flag = 0;
 	}
+#elif(MOUSE_R250_RF_PEN)
+	static u8 repeat_cnt = 0;
+	if( (RC_BUTTON_FIRST == btn_status) || (RC_BUTTON_REPEAT == btn_status) ){
+		if(RC_ONLY_UP_VALUE == btn_last){
+			map_value = RC_DATA_UP;
+		}
+		else if(RC_ONLY_RF_LED_VALUE == btn_last){
+			map_value = RC_DATA_RF_LED;
+		}
+		else if(RC_ONLY_DOWN_VALUE == btn_last){
+			map_value = RC_DATA_DOWN;
+		}
+		else if(RC_ONLY_START_VALUE == btn_last){
+			if(RC_BUTTON_REPEAT == btn_status){
+				if(repeat_cnt++ > 5 ){
+					map_value = RC_DATA_TAB_OVR;
+					repeat_cnt = 0;
+				}
+			}
+			else{
+				map_value = RC_DTAT_START + (start_key_cnt << 2);
+				start_key_cnt = (start_key_cnt + 1) & 1;
+			}
+
+		}
+		else if(RC_ONLY_VOL_DOWN_VALUE == btn_last){
+			map_value = RC_DATA_VOL_DOWN;
+		}
+		else if(RC_ONLY_VOL_UP_VALUE == btn_last){
+			map_value = RC_DATA_VOL_UP;
+		}
+	}
+	else if(RC_BUTTON_RELEASE == btn_status){
+		repeat_cnt = 0;
+	}
 #endif
 
 
@@ -497,19 +532,33 @@ u32 rc_button_process_and_mapping(rc_status_t * rc_status, u32 deepsleep)
         /*detect whether is new button is pressed */
     	if( button_last ){
     		button_flag = RC_BUTTON_FIRST;
-    		gpio_write(M_HW_LED_CTL, 1);	//enable LED
+    		if(button_last == RC_ONLY_RF_LED_VALUE){
+#if(SWS_CONTROL_LED2_EN)
+    		   	gpio_write(M_HW_LED2_CTL , 1);
+#endif
+    		}
+    		else{
+    			gpio_write(M_HW_LED_CTL, 1);	//enable LED
+    		}
     	}
     }
     else{
     	if(button_pre == button_last){
 		/*detect whether is button is long pressed */
-    		gpio_write(M_HW_LED_CTL, 1);	//enable LED
-    		if( rc_btn_cnt >= RC_BUTTON_REPEAT_THRESH){
+    		if(button_last == RC_ONLY_RF_LED_VALUE){
+#if(SWS_CONTROL_LED2_EN)
+    		   	gpio_write(M_HW_LED2_CTL , 1);
+#endif
+    		}
+    		else{
+    			gpio_write(M_HW_LED_CTL, 1);	//enable LED
+    		}
+
+    		if( rc_btn_cnt++ >= RC_BUTTON_REPEAT_THRESH){
     			rc_btn_cnt = 0;
         		button_flag = RC_BUTTON_REPEAT;
     		}
     		else{
-    			rc_btn_cnt += 6;
     			button_flag = RC_BUTTON_KEEP;
     		}
     	}
@@ -517,19 +566,14 @@ u32 rc_button_process_and_mapping(rc_status_t * rc_status, u32 deepsleep)
 		/*detect whether is button is released */
     		rc_btn_cnt = 0;
     		gpio_write(M_HW_LED_CTL, 0);	//shut down LED
+#if(SWS_CONTROL_LED2_EN)
+        	gpio_write(M_HW_LED2_CTL , 0);
+#endif
+
     	}
     }
 
 	map_value = rc_btn_value_mapping(rc_status, button_last, button_pre, button_flag, deepsleep);
-
-#if(SWS_CONTROL_LED2_EN)
-    if(map_value == RC_DATA_RF_LED){
-    	gpio_write(M_HW_LED2_CTL , 1);
-    }
-    else{
-    	gpio_write(M_HW_LED2_CTL , 0);
-    }
-#endif
 
 	button_pre = button;
 

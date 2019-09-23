@@ -118,7 +118,7 @@ void  user_init(void)
 #endif
 
     if ( rc_status.mouse_mode == STATE_POWERON ){
-        mouse_led_setup( rc_led_cfg[E_LED_POWER_ON] );
+        //mouse_led_setup( rc_led_cfg[E_LED_POWER_ON] );
     }
     else if(rc_status.mouse_mode == STATE_NORMAL){
     	btn_wakeup_flag = 1;

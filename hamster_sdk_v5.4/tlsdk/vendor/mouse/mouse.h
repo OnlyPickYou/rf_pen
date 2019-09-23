@@ -42,8 +42,10 @@ extern "C" {
 
 #if(MOUSE_SIM_RF_PEN)
 #define MAX_MOUSE_BUTTON        3
-#else
+#elif(MOUSE_R150_RF_PEN)
 #define MAX_MOUSE_BUTTON        5
+#elif(MOUSE_R250_RF_PEN)
+#define MAX_MOUSE_BUTTON        6
 #endif
 
 #define		PKT_BUFF_SIZE		48

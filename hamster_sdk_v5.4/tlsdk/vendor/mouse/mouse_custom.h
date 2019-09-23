@@ -58,7 +58,7 @@ extern "C" {
 #endif
 
 #ifndef M_HW_BTN_TAB
-#define M_HW_BTN_TAB		GPIO_GP0
+#define M_HW_BTN_TAB		GPIO_GP3
 #endif
 
 #ifndef M_HW_BTN_VOL_DOWN
