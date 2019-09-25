@@ -33,8 +33,8 @@ extern "C" {
 
 
 #define MOUSE_SIM_RF_PEN		0
-#define MOUSE_R250_RF_PEN		1
-#define MOUSE_R150_RF_PEN		0
+#define MOUSE_R250_RF_PEN		0
+#define MOUSE_R150_RF_PEN		1
 
 #define SWS_DATA_OUT 			1   //sws pullup: output high, output disable
 

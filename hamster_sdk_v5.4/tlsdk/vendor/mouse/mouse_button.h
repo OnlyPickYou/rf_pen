@@ -16,7 +16,7 @@
 #define RC_BUTTON_OVER_THRESH 	120		//120 * 12ms = 1440ms
 #define	RC_MAX_BUTTON_VALUE 	3
 
-#define SWS_CONTROL_LED2_EN			1
+#define SWS_CONTROL_LED2_EN		1
 #define RC_BUTTON_REPEAT_THRESH	20			//12 * 16ms = 200ms
 #define RC_DOUBLE_TAB_THRESH	12
 
@@ -46,7 +46,7 @@ enum{
 };
 #else
 
-#if(MOUSE_R150_RF_PEN)
+#if(MOUSE_R150_RF_PEN || MOUSE_SIM_RF_PEN)
 enum{
 	RC_INVALID_VALUE        =  0,
 	RC_ONLY_UP_VALUE	    = 0x1,

@@ -64,7 +64,7 @@ void mouse_sleep_wakeup_init( rc_hw_t *pHW ){
     device_sleep.mcu_sleep_en = CUST_MCU_SLEEP_EN;
     
     //u32 tick = ((p_custom_cfg->slp_tick << 1) + p_custom_cfg->slp_tick) >> 6; //tick = 200ms * 256 * 256 * 3 / 64 = 614s
-    device_sleep.thresh_100ms = 5;		//614 s
+    device_sleep.thresh_100ms = 10;		//614 s
 
 #else
 	device_sleep.thresh_100ms = U16_MAX;
@@ -240,10 +240,10 @@ static inline void mouse_power_saving_process( rc_status_t *rc_status ){
     	device_info_save(rc_status, 1);    	        //Save related information to 3.3V analog register
 	}
 #if	MOUSE_SW_CUS
-	if ( rc_status->high_end == MS_HIGHEND_250_REPORTRATE )
-    	device_sleep.wakeup_time = 8;
-	else
-    	device_sleep.wakeup_time = 12;
+	//if ( rc_status->high_end == MS_HIGHEND_250_REPORTRATE )
+    //	device_sleep.wakeup_time = 8;
+	//else
+    device_sleep.wakeup_time = 8;
 #else
 	device_sleep.wakeup_time = 8;
 #endif

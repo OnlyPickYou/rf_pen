@@ -23,6 +23,9 @@ rc_btn_ctrl_t rc_btn_ctrl;
 u8 start_key_cnt = 0;
 u32 rc_btn_cnt = 0;
 
+#define BUTTON_REPEAT_CNT	50
+#define BUTTON_THRESH_CNT   550
+
 #if 0
 kb_data_t btn_map_value[RC_MAX_DATA_VALUE] = {
 		{1, 0, VK_PAGE_DOWN, 0, 0, 0, 0, 0},
@@ -38,19 +41,25 @@ kb_data_t btn_map_value[RC_MAX_DATA_VALUE] = {
 		{1, 0, VK_PAGE_UP, 0, 0, 0, 0, 0},		//0
 		{0, 0, 0, 0, 0, 0, 0, 0, },
 		{1, 0, VK_PAGE_DOWN, 0, 0, 0, 0, 0},
-		{1, VK_MSK_SHIFT, VK_F5, 0, 0, 0, 0, 0},
+		//{1, VK_MSK_SHIFT, VK_F5, 0, 0, 0, 0, 0},
+		//{2, (VK_MSK_SHIFT | VK_MSK_LWIN | VK_MSK_LALT) ,VK_F5, VK_P, 0, 0, 0, 0},
+		{0xff, 0xff, 0xff, VK_SWITCH0, 0, 0, 0, 0},
 		{1, 0, VK_TAB, 0, 0, 0, 0, 0},				//4
 		{1, 0, VK_VOL_DN, 0, 0, 0, 0, 0},
 		{1, 0, VK_VOL_UP, 0, 0, 0, 0, 0},
 
 		{1, 0, VK_ESC, 0, 0, 0, 0, 0},
-		{1, 0, VK_PERIOD, 0, 0, 0, 0, 0},
+		{1, 0, VK_B, 0, 0, 0, 0, 0},
 		{1, 0, VK_TAB, 0, 0, 0, 0, 0},				//9
 		{1, VK_MSK_ALT, VK_TAB,0, 0, 0, 0, 0},		//10
 		{1, 0, VK_ENTER, 0, 0, 0, 0, 0},
 		{0, VK_MSK_ALT, 0, 0, 0, 0, 0, 0},
 };
 
+kb_data_t btn_map_switch[2] = {
+		{1, VK_MSK_SHIFT, VK_F5, 0, 0, 0, 0, 0},
+		{1, (VK_MSK_LWIN | VK_MSK_LALT), VK_P, 0, 0, 0, 0, 0},
+};
 
 #endif
 
@@ -252,16 +261,16 @@ static u32 rc_btn_value_mapping(rc_status_t *rc_status, u32 btn_last, u32 btn_pr
 	static u8 EscPressFlag = 0;
 
 	test_mode_pending = 0;
-	rc_btn_proc += 12;
+	rc_btn_proc += 8;
 
 #if(MOUSE_SIM_RF_PEN)
 
-	if( TabPressFlag && (abs(rc_btn_proc - rc_btn_ctrl.LastPreTick) > 350 )){
+	if( TabPressFlag && (abs(rc_btn_proc - rc_btn_ctrl.LastPreTick) > BUTTON_THRESH_CNT )){
 		TabPressFlag = 0;
 		return rc_btn_ctrl.KeyNumSave[0];
 	}
 
-	if(EscPressFlag && (abs(rc_btn_proc - rc_btn_ctrl.LastEscTick) > 350 )){
+	if(EscPressFlag && (abs(rc_btn_proc - rc_btn_ctrl.LastEscTick) > BUTTON_THRESH_CNT )){
 		EscPressFlag = 0;
 		return rc_btn_ctrl.KeyNumSave[1];
 	}
@@ -274,7 +283,7 @@ static u32 rc_btn_value_mapping(rc_status_t *rc_status, u32 btn_last, u32 btn_pr
 				rc_btn_ctrl.KeyNumSave[0] = RC_DATA_TAB_OVR;
 			}
 			else{
-				if (abs(rc_btn_proc - rc_btn_ctrl.LastPreTick) < 350){
+				if (abs(rc_btn_proc - rc_btn_ctrl.LastPreTick) <= BUTTON_THRESH_CNT){
 					TabPressFlag = 0;
 					//if(start_key_cnt){
 					map_value = RC_DATA_DOUBLE_TAB;
@@ -317,7 +326,6 @@ static u32 rc_btn_value_mapping(rc_status_t *rc_status, u32 btn_last, u32 btn_pr
 	}
 	else if(RC_BUTTON_KEEP == btn_status)
 	{
-		rc_btn_proc -= 6;
 		if( tab_repeat_flag && (RC_ONLY_DOWN_VALUE == btn_last) ){
 			map_value = RC_DATA_REPEAT_ALT;
 		}
@@ -347,12 +355,12 @@ static u32 rc_btn_value_mapping(rc_status_t *rc_status, u32 btn_last, u32 btn_pr
 		tab_repeat_flag = 0;
 	}
 #elif(MOUSE_R150_RF_PEN)
-	if( TabPressFlag && (abs(rc_btn_proc - rc_btn_ctrl.LastPreTick) > 350 )){
+	if( TabPressFlag && (abs(rc_btn_proc - rc_btn_ctrl.LastPreTick) > BUTTON_THRESH_CNT )){
 		TabPressFlag = 0;
 		return rc_btn_ctrl.KeyNumSave[0];
 	}
 
-	if(EscPressFlag && (abs(rc_btn_proc - rc_btn_ctrl.LastEscTick) > 350 )){
+	if(EscPressFlag && (abs(rc_btn_proc - rc_btn_ctrl.LastEscTick) > BUTTON_THRESH_CNT )){
 		EscPressFlag = 0;
 		return rc_btn_ctrl.KeyNumSave[1];
 	}
@@ -365,7 +373,7 @@ static u32 rc_btn_value_mapping(rc_status_t *rc_status, u32 btn_last, u32 btn_pr
 				rc_btn_ctrl.KeyNumSave[0] = RC_DATA_TAB_OVR;
 			}
 			else{
-				if (abs(rc_btn_proc - rc_btn_ctrl.LastPreTick) < 350){
+				if (abs(rc_btn_proc - rc_btn_ctrl.LastPreTick) <= BUTTON_THRESH_CNT){
 					TabPressFlag = 0;
 					//if(start_key_cnt){
 					map_value = RC_DATA_DOUBLE_TAB;
@@ -427,7 +435,7 @@ static u32 rc_btn_value_mapping(rc_status_t *rc_status, u32 btn_last, u32 btn_pr
 	}
 	else if(RC_BUTTON_KEEP == btn_status)
 	{
-		rc_btn_proc -= 6;
+		//rc_btn_proc -= 6;
 		if( tab_repeat_flag && (RC_ONLY_TAB_VALUE == btn_last) ){
 			map_value = RC_DATA_REPEAT_ALT;
 		}
@@ -487,7 +495,7 @@ static u32 rc_btn_value_mapping(rc_status_t *rc_status, u32 btn_last, u32 btn_pr
 		}
 		else if(RC_ONLY_START_VALUE == btn_last){
 			if(RC_BUTTON_REPEAT == btn_status){
-				if(repeat_cnt++ > 5 ){
+				if(repeat_cnt++ > 3 ){
 					map_value = RC_DATA_TAB_OVR;
 					repeat_cnt = 0;
 				}
@@ -546,17 +554,14 @@ u32 rc_button_process_and_mapping(rc_status_t * rc_status, u32 deepsleep)
     	if(button_pre == button_last){
 		/*detect whether is button is long pressed */
     		if(button_last == RC_ONLY_RF_LED_VALUE){
+    			gpio_write(M_HW_LED_CTL, 1);	//enable LED
 #if(SWS_CONTROL_LED2_EN)
     		   	gpio_write(M_HW_LED2_CTL , 1);
 #endif
     		}
-    		else{
-    			gpio_write(M_HW_LED_CTL, 1);	//enable LED
-    		}
-
-    		if( rc_btn_cnt++ >= RC_BUTTON_REPEAT_THRESH){
+    		if(rc_btn_cnt++ > BUTTON_REPEAT_CNT ){
     			rc_btn_cnt = 0;
-        		button_flag = RC_BUTTON_REPEAT;
+    			button_flag = RC_BUTTON_REPEAT;
     		}
     		else{
     			button_flag = RC_BUTTON_KEEP;

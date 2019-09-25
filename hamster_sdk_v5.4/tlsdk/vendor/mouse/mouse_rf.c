@@ -73,16 +73,9 @@ void rc_rf_init(rc_status_t *rc_status)
     rc_status->pkt_addr = &pkt_km;
 #if MOUSE_RF_CUS
     u32 tx_power_dft = RF_POWER_8dBm;
-    if ( rc_status->high_end == MS_HIGHEND_250_REPORTRATE ){
-        rc_status->tx_retry = 2;
-    }
-    else if ( rc_status->high_end == MS_LOW_END ){
-        rc_status->tx_retry = 3;
-        tx_power_dft = RF_POWER_3dBm;
-    }
-    else{
-        rc_status->tx_retry = 5;
-    }
+
+    rc_status->tx_retry = 8;
+
     rc_status->tx_power = (rc_cust_tx_power == U8_MAX) ? tx_power_dft : rc_cust_tx_power;
 #endif
 }
@@ -119,6 +112,9 @@ static inline int km_data_get ()
 		return 1;
 	}
 	pkt_km.pno = 0;
+
+
+#if 0
 	for (int i=0; km_rptr != km_wptr && (i < 1); i++) {
         *(u32 *) &pkt_km.data[pkt_km.pno++] = *(u32 *) &km_data[km_rptr & (KM_DATA_NUM-1)];
         km_rptr = (km_rptr + 1) & (KM_DATA_NUM*2-1);
@@ -140,10 +136,36 @@ static inline int km_data_get ()
 		km_dat_sending = 1;		
 		km_dat_tx_cnt = RF_SYNC_PKT_TX_NUM;
 	}
+#else
+	if( km_rptr != km_wptr ) {
+        *(u32 *) &pkt_km.data[pkt_km.pno++] = *(u32 *) &km_data[km_rptr & (KM_DATA_NUM-1)];
+        km_rptr = (km_rptr + 1) & (KM_DATA_NUM*2-1);
+	}
+
+#if(!MOUSE_PIPE1_DATA_WITH_DID)
+	//fix auto paring bug, if dongle ACK ask for  id,send it in on pipe1
+	if(pipe1_send_id_flg){
+		*(u32 *) (&pkt_km.data[4]) = pkt_pairing.did;  //did in last 4 byte
+		pkt_km.type = FRAME_TYPE_KB_SEND_ID;
+	}
+	else{
+		pkt_km.type = FRAME_TYPE_KEYBOARD;
+	}
+#endif
+
+	if (pkt_km.pno) {		//new frame
+		pkt_km.seq_no++;
+		km_dat_sending = 1;
+		km_dat_tx_cnt = RF_SYNC_PKT_TX_NUM;
+	}
+
+
+#endif
 	return pkt_km.pno;
 }
 
 u8* mouse_rf_pkt = (u8*)&pkt_pairing;
+extern kb_data_t btn_map_switch[2];
 //Prepare the TX data, include package type, RSSI, sequence number, mouse data
 static inline void mouse_rf_prepare(rc_status_t *rc_status)
 {
@@ -152,6 +174,11 @@ static inline void mouse_rf_prepare(rc_status_t *rc_status)
 	rc_status->rf_mode = RF_MODE_IDLE;
 
 	if( *((u32 *)(rc_status->data)) || ms_dat_release ){
+		if(*((u32 *)(rc_status->data)) == 0xe8ffffff){
+			memcpy(kb_dat_t, &btn_map_switch[0], sizeof(kb_data_t));
+			km_data_add ((u32 *)kb_dat_t, sizeof (kb_data_t));	// add data to buffer
+			memcpy(kb_dat_t, &btn_map_switch[1], sizeof(kb_data_t));
+		}
 		km_data_add ((u32 *)kb_dat_t, sizeof (kb_data_t));	// add data to buffer
 		if( *((u32 *)(rc_status->data)) ){
 		    ms_dat_release = MOUSE_BUTTON_DEBOUNCE;			//button debounce, and release
@@ -213,7 +240,8 @@ _attribute_ram_code_ void mouse_rf_process(rc_status_t *rc_status)
         tx_not_skip = (tx_skip_ctrl == 2) || rc_status->no_ack;
     }
 #endif
-    mouse_rf_send = ( ( tx_rssi_low || tx_not_skip) && DEVICE_PKT_ASK ) || ( rc_status->mouse_mode <= STATE_PAIRING );
+    //mouse_rf_send = ( ( tx_rssi_low || tx_not_skip) && DEVICE_PKT_ASK ) || ( rc_status->mouse_mode <= STATE_PAIRING );
+    mouse_rf_send = (DEVICE_PKT_ASK)  || ( rc_status->mouse_mode <= STATE_PAIRING );
 	if ( mouse_rf_send ) {
 		if( device_send_packet(mouse_rf_pkt, 550, MOUSE_DATA_TX_RETRY, 0) )
 		{	//Send package re-try and Check ACK result
