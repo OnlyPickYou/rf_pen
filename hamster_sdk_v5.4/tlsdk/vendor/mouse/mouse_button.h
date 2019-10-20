@@ -4,6 +4,7 @@
  *  Created on: Feb 12, 2014
  *      Author: xuzhen
  */
+#include "mouse.h"
 
 #ifndef MOUSE_BUTTON_H_
 #define MOUSE_BUTTON_H_
@@ -97,7 +98,7 @@ typedef struct{
 }rc_btn_ctrl_t;
 #endif
 
-extern kb_data_t btn_map_value[RC_MAX_DATA_VALUE];
+extern const u8 btn_map_value[RC_MAX_DATA_VALUE][8];
 
 
 void rc_button_init(rc_hw_t *rc_hw);

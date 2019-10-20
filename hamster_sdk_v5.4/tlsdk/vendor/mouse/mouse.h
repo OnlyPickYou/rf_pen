@@ -33,15 +33,15 @@ extern "C" {
 
 
 #define MOUSE_SIM_RF_PEN		0
-#define MOUSE_R250_RF_PEN		0
-#define MOUSE_R150_RF_PEN		1
+#define MOUSE_R250_RF_PEN		1
+#define MOUSE_R150_RF_PEN		0
 
 #define SWS_DATA_OUT 			1   //sws pullup: output high, output disable
 
 #define _USER_CONFIG_DEFINED_	1	// must define this macro to make others known 
 
 #if(MOUSE_SIM_RF_PEN)
-#define MAX_MOUSE_BUTTON        3
+#define MAX_MOUSE_BUTTON        4
 #elif(MOUSE_R150_RF_PEN)
 #define MAX_MOUSE_BUTTON        5
 #elif(MOUSE_R250_RF_PEN)
@@ -59,10 +59,13 @@ typedef struct {
 	u8 gpio_level_button[MAX_MOUSE_BUTTON];  // 0-5 : button pull up/down(1 for pullup)
 	u8 gpio_level_led;   //led on level(1 for high valid)
 	u8 vbat_channel;
-	u8 rsvd[3];
+#if(MOUSE_SIM_RF_PEN)
+	u8 rsvd[2];
+#elif(MOUSE_R150_RF_PEN)
+	u8 rsvd[1];
+#endif
 
 }rc_hw_t;
-
 
 typedef struct {
 

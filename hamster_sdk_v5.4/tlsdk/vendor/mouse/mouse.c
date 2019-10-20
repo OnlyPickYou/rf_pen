@@ -107,6 +107,7 @@ void  user_init(void)
 	rc_status.no_ack = 1;    //no_ack == 0, wakeup sensor from deep-sleep every time
 
     gpio_pullup_dpdm_internal( FLD_GPIO_DM_PULLUP | FLD_GPIO_DP_PULLUP );
+
     rc_custom_init( &rc_status );
 
 	device_info_load(&rc_status);
@@ -122,7 +123,6 @@ void  user_init(void)
     }
     else if(rc_status.mouse_mode == STATE_NORMAL){
     	btn_wakeup_flag = 1;
-    	write_reg8(0x8001, 0x5a);
     }
 
 	rc_button_pull_and_detect(&rc_status);
@@ -294,15 +294,15 @@ void mouse_task_when_rf ( void ){
     mouse_power_saving_process(&rc_status);
     
     btn_value = rc_button_detect(&rc_status, MOUSE_BTN_LOW);
-    //if ( (rc_status.high_end != MS_HIGHEND_250_REPORTRATE) || (rc_status.loop_cnt & 1) ){
     map_value = rc_button_process_and_mapping(&rc_status, 0);
     if(RC_MAX_DATA_VALUE != map_value){
-    	memcpy(&rc_data, &btn_map_value[map_value], sizeof(kb_data_t));
+    	memcpy(&rc_data, &btn_map_value[map_value][0], sizeof(kb_data_t));
     }
     else if(btn_wakeup_flag && RC_MAX_DATA_VALUE != btn_wakeup_value){
     	btn_wakeup_flag = 0;
-    	memcpy(&rc_data, &btn_map_value[btn_wakeup_value], sizeof(kb_data_t));
+    	memcpy(&rc_data, &btn_map_value[btn_wakeup_value][0], sizeof(kb_data_t));
     }
+
     //}
 #if    MOSUE_BATTERY_LOW_DETECT
     static u16 batt_det_count = 0;    
@@ -330,14 +330,7 @@ _attribute_ram_code_ void mouse_task_in_ram( void ){
        (*p_task_when_rf) ();
     }
     dbg_led_high;
-#if MOUSE_SW_CUS
-	if ( rc_status.high_end == MS_HIGHEND_250_REPORTRATE )
-	    ll_add_clock_time (4000);
-    else        
-        ll_add_clock_time (8000);
-#else
-	ll_add_clock_time (8000);
-#endif
+    ll_add_clock_time (8000);
 
     device_sleep_wakeup( &device_sleep );
     dbg_led_low;

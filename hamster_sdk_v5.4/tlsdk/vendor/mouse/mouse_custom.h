@@ -202,7 +202,7 @@ extern led_cfg_t rc_led_cfg[];
 #define rc_cust_tx_power         (p_custom_cfg->tx_power)
 #if	MOUSE_RF_CUS
 
-#define rc_cust_tx_power_paring  ( (p_custom_cfg->tx_power_paring == 0xff) ? RF_POWER_m24dBm : p_custom_cfg->tx_power_paring )
+#define rc_cust_tx_power_paring  ( (p_custom_cfg->tx_power_paring == 0xff) ? RF_POWER_m16dBm : p_custom_cfg->tx_power_paring )
 #define rc_cust_tx_power_sync  ( (p_custom_cfg->tx_power_sync == 0xff) ? rc_status->tx_power : p_custom_cfg->tx_power_sync )
 #define rc_cust_tx_power_emi         ( (p_custom_cfg->tx_power_emi == 0xff) ? RF_POWER_8dBm : p_custom_cfg->tx_power_emi )
 #else

@@ -26,24 +26,34 @@ const u32 m_hw_def_dft[] = {
 	M_HW_BTN_UP,
 	M_HW_BTN_RF_LED,
 	M_HW_BTN_DOWN,
+	//M_HW_BTN_START,
+	M_HW_BTN_TAB,
     M_HW_LED_CTL,
-    M_HW_GPIO_LEVEL_UP | (M_HW_GPIO_LEVEL_RF_LED<<8) | (M_HW_GPIO_LEVEL_DOWN<<16) | (M_HW_GPIO_LEVEL_LED<<24),
-    M_HW_VBAT_CHN,
+    M_HW_GPIO_LEVEL_UP | (M_HW_GPIO_LEVEL_RF_LED<<8) | (M_HW_GPIO_LEVEL_DOWN<<16) |(M_HW_GPIO_LEVEL_TAB<<24),
+    //M_HW_GPIO_LEVEL_TAB | (M_HW_GPIO_LEVEL_VOL_DOWN<<8) | (M_HW_GPIO_LEVEL_VOL_UP<<16) | (M_HW_GPIO_LEVEL_LED<<24),
+    M_HW_GPIO_LEVEL_LED | (M_HW_VBAT_CHN << 8),
 };
 #elif(MOUSE_R250_RF_PEN)
 const u32 m_hw_def_dft[] = {
 	M_HW_BTN_UP,
 	M_HW_BTN_RF_LED,
 	M_HW_BTN_DOWN,
+#if(1)
 	M_HW_BTN_START,
+#endif
 	//M_HW_BTN_TAB,
 	M_HW_BTN_VOL_DOWN,
 	M_HW_BTN_VOL_UP,
     M_HW_LED_CTL,
+#if(1)
     M_HW_GPIO_LEVEL_UP | (M_HW_GPIO_LEVEL_RF_LED<<8) | (M_HW_GPIO_LEVEL_DOWN<<16) |(M_HW_GPIO_LEVEL_START<<24),
     //M_HW_GPIO_LEVEL_TAB | (M_HW_GPIO_LEVEL_VOL_DOWN<<8) | (M_HW_GPIO_LEVEL_VOL_UP<<16) | (M_HW_GPIO_LEVEL_LED<<24),
-    M_HW_GPIO_LEVEL_VOL_DOWN | (M_HW_GPIO_LEVEL_VOL_UP<<8) | (M_HW_GPIO_LEVEL_LED<<16),
-    M_HW_VBAT_CHN,
+    M_HW_GPIO_LEVEL_VOL_DOWN | (M_HW_GPIO_LEVEL_VOL_UP<<8) | (M_HW_GPIO_LEVEL_LED<<16)| (M_HW_VBAT_CHN << 24),
+#else
+    M_HW_GPIO_LEVEL_UP | (M_HW_GPIO_LEVEL_RF_LED<<8) | (M_HW_GPIO_LEVEL_DOWN<<16) |(M_HW_GPIO_LEVEL_VOL_DOWN<<24),
+    //M_HW_GPIO_LEVEL_TAB | (M_HW_GPIO_LEVEL_VOL_DOWN<<8) | (M_HW_GPIO_LEVEL_VOL_UP<<16) | (M_HW_GPIO_LEVEL_LED<<24),
+    M_HW_GPIO_LEVEL_VOL_UP | (M_HW_GPIO_LEVEL_LED<<8) | (M_HW_VBAT_CHN<<16),
+#endif
 };
 #elif(MOUSE_R150_RF_PEN)
 const u32 m_hw_def_dft[] = {
@@ -52,13 +62,10 @@ const u32 m_hw_def_dft[] = {
 	M_HW_BTN_DOWN,
 	M_HW_BTN_START,
 	M_HW_BTN_TAB,
-	//M_HW_BTN_VOL_DOWN,
-	//M_HW_BTN_VOL_UP,
     M_HW_LED_CTL,
     M_HW_GPIO_LEVEL_UP | (M_HW_GPIO_LEVEL_RF_LED<<8) | (M_HW_GPIO_LEVEL_DOWN<<16) |(M_HW_GPIO_LEVEL_START<<24),
     //M_HW_GPIO_LEVEL_TAB | (M_HW_GPIO_LEVEL_VOL_DOWN<<8) | (M_HW_GPIO_LEVEL_VOL_UP<<16) | (M_HW_GPIO_LEVEL_LED<<24),
-    M_HW_GPIO_LEVEL_TAB | (M_HW_GPIO_LEVEL_LED<<8),
-    M_HW_VBAT_CHN,
+    M_HW_GPIO_LEVEL_TAB | (M_HW_GPIO_LEVEL_LED<<8) | (M_HW_VBAT_CHN << 16),
 };
 #endif
 
@@ -134,9 +141,9 @@ void rc_custom_init ( rc_status_t *pStatus ){
 
     pkt_pairing.did = (p_custom_cfg->did == U32_MAX) ? pkt_pairing.did : p_custom_cfg->did;   //device-id init
 
-    if(pkt_pairing.did > 2000){
+    if(pkt_pairing.did > 1000){
     	write_reg8(0x8005, 0x22);
-    	while(1);
+    	//while(1);
     }
 
 	u16 vendor_id = p_custom_cfg->vid;

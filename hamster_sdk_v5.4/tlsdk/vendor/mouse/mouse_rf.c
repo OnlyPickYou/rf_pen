@@ -55,14 +55,8 @@ rf_packet_keyboard_t	pkt_km = {
 };
 
 
-
-#if MOUSE_RF_CUS	//cavy mouse tx power fixed
-#define MOUSE_DATA_TX_RETRY 	(rc_status->tx_retry)
-#define MOUSE_DATA_TX_POWER 	(rc_status->tx_power)
-#else
 #define MOUSE_DATA_TX_RETRY 	7
 #define MOUSE_DATA_TX_POWER 	RF_POWER_8dBm
-#endif
 
 void rc_rf_init(rc_status_t *rc_status)
 {
@@ -71,10 +65,10 @@ void rc_rf_init(rc_status_t *rc_status)
 	rf_receiving_pipe_enble( 0x3f);	// channel mask
 
     rc_status->pkt_addr = &pkt_km;
-#if MOUSE_RF_CUS
+#if (MOUSE_RF_CUS || 1 )
     u32 tx_power_dft = RF_POWER_8dBm;
 
-    rc_status->tx_retry = 8;
+    rc_status->tx_retry = 6;
 
     rc_status->tx_power = (rc_cust_tx_power == U8_MAX) ? tx_power_dft : rc_cust_tx_power;
 #endif
@@ -216,8 +210,7 @@ static inline void mouse_rf_prepare(rc_status_t *rc_status)
         }
     }
 #endif
-    extern u8 dbg_sensor_cpi;
-    //pkt_km.flow = (rc_status->loop_cnt & 1) ? (cpu_working_tick >> 8) : ((rc_status->mouse_sensor & 0x0f) << 4) | dbg_sensor_cpi;
+
 }
 
 //extern u32 cpu_working_tick;
@@ -230,20 +223,20 @@ u8 mouse_rf_send;
 _attribute_ram_code_ void mouse_rf_process(rc_status_t *rc_status)
 {
 	mouse_rf_prepare(rc_status);
-    static s8 tx_skip_ctrl = 2;
-    u8 tx_rssi_low = MOUSE_RX_RSSI_LOW;
+    //static s8 tx_skip_ctrl = 2;
+    //u8 tx_rssi_low = MOUSE_RX_RSSI_LOW;
 
-    tx_skip_ctrl = 1;
-    u8 tx_not_skip = tx_skip_ctrl;
+    //tx_skip_ctrl = 1;
+    //u8 tx_not_skip = tx_skip_ctrl;
 #if MOUSE_SW_CUS
-    if (rc_status->high_end == MS_HIGHEND_ULTRA_LOW_POWER){
-        tx_not_skip = (tx_skip_ctrl == 2) || rc_status->no_ack;
-    }
+    //if (rc_status->high_end == MS_HIGHEND_ULTRA_LOW_POWER){
+    //    tx_not_skip = (tx_skip_ctrl == 2) || rc_status->no_ack;
+    //}
 #endif
     //mouse_rf_send = ( ( tx_rssi_low || tx_not_skip) && DEVICE_PKT_ASK ) || ( rc_status->mouse_mode <= STATE_PAIRING );
     mouse_rf_send = (DEVICE_PKT_ASK)  || ( rc_status->mouse_mode <= STATE_PAIRING );
 	if ( mouse_rf_send ) {
-		if( device_send_packet(mouse_rf_pkt, 550, MOUSE_DATA_TX_RETRY, 0) )
+		if( device_send_packet(mouse_rf_pkt, 580, MOUSE_DATA_TX_RETRY, 0) )
 		{	//Send package re-try and Check ACK result
 			km_dat_sending = 0;						//km_data_send_ok
 			rc_status->no_ack = 0;

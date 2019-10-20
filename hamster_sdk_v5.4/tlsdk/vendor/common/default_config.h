@@ -361,7 +361,7 @@ extern "C" {
 #endif
 
 #ifndef MOUSE_BUTTON_DEBOUNCE
-#define MOUSE_BUTTON_DEBOUNCE		2
+#define MOUSE_BUTTON_DEBOUNCE		1
 #endif
 
 ///////////////////  interrupt  //////////////////////////////
